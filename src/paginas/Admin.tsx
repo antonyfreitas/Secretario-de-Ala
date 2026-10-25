@@ -13,6 +13,8 @@ export default function Admin() {
   const [msg, setMsg] = useState({ t: '', err: false });
   const [novo, setNovo] = useState({ usuario: '', nome: '', role: 'user', senha: gerarSenha() });
   const [mostrada, setMostrada] = useState('');
+  const [ed, setEd] = useState<{ id: string; usuario: string; nome: string; role: string } | null>(null);
+  const [armado, setArmado] = useState<string | null>(null);
   const aviso = (t: string, err = false) => setMsg({ t, err });
 
   const carregar = async () => {
@@ -56,6 +58,29 @@ export default function Admin() {
     aviso('Senha redefinida. As sessões abertas desse usuário foram encerradas.');
   };
 
+  const salvarEdicao = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !ed) return;
+    const { error } = await supabase.rpc('editar_usuario', { p_id: ed.id, p_usuario: ed.usuario, p_nome: ed.nome, p_role: ed.role });
+    if (error) return aviso(`Não foi possível salvar: ${error.message}.`, true);
+    setEd(null);
+    aviso(ed.id === perfil?.id ? 'Atualizado. Entre de novo para a tela mostrar o novo nome.' : 'Usuário atualizado. O login é o nome de usuário em minúsculas.');
+    await carregar();
+  };
+  const excluir = async (p: Perfil) => {
+    if (!supabase) return;
+    if (armado !== p.id) {
+      setArmado(p.id);
+      setTimeout(() => setArmado((a) => (a === p.id ? null : a)), 5000);
+      return;
+    }
+    setArmado(null);
+    const { error } = await supabase.rpc('excluir_usuario', { p_id: p.id });
+    if (error) return aviso(`Não foi possível excluir: ${error.message}.`, true);
+    aviso(`${p.usuario} foi excluído de vez. As atas dele continuam e passam a ser suas.`);
+    await carregar();
+  };
+
   return (
     <main>
       <Link className="back" to="/">‹ Início</Link>
@@ -63,15 +88,24 @@ export default function Admin() {
       <p className="mut">Só administradores veem esta página. As permissões também são aplicadas no banco, não só na tela.</p>
 
       <fieldset><legend>Usuários</legend>
-        {lista.map((p) => (
+        {lista.map((p) => (ed && ed.id === p.id ? (
+          <form className="col" key={p.id} onSubmit={(e) => void salvarEdicao(e)}>
+            <div><label htmlFor="eu">Usuário (é o login)</label><input id="eu" type="text" autoCapitalize="none" autoComplete="off" value={ed.usuario} onChange={(e) => setEd({ ...ed, usuario: e.target.value })} required /></div>
+            <div><label htmlFor="en">Nome</label><input id="en" type="text" autoComplete="off" value={ed.nome} onChange={(e) => setEd({ ...ed, nome: e.target.value })} /></div>
+            <div><label htmlFor="er">Papel</label><select id="er" value={ed.role} onChange={(e) => setEd({ ...ed, role: e.target.value })}><option value="user">Usuário</option><option value="admin">Administrador</option></select></div>
+            <div className="acts"><button className="btn" type="button" onClick={() => setEd(null)}>Cancelar</button><button className="btn p" type="submit">Salvar alterações</button></div>
+          </form>
+        ) : (
           <div className="ln" key={p.id}>
             <div><b>{p.usuario}</b> <span>{p.role === 'admin' ? 'administrador' : 'usuário'}{p.nome ? ` · ${p.nome}` : ''}{p.ativo ? '' : ' · desativado'}</span></div>
             <div className="acts">
+              <button className="btn sw" type="button" onClick={() => setEd({ id: p.id, usuario: p.usuario, nome: p.nome, role: p.role })}>Editar</button>
               <button className="btn sw" type="button" onClick={() => void redefinir(p)}>Nova senha</button>
               <button className="btn sw" type="button" disabled={p.id === perfil?.id} onClick={() => void alternarAtivo(p)}>{p.ativo ? 'Desativar' : 'Ativar'}</button>
+              <button className="btn sw" type="button" disabled={p.id === perfil?.id} onClick={() => void excluir(p)}>{armado === p.id ? 'Confirmar: excluir de vez' : 'Excluir'}</button>
             </div>
           </div>
-        ))}
+        )))}
         {mostrada && <p className="card">{mostrada}</p>}
       </fieldset>
 
