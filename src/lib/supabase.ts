@@ -11,3 +11,6 @@ export const supabase = configurado
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'secretaria-auth' },
     })
   : null;
+
+/** Nomes (sem valores) das variáveis que não chegaram no build; ajuda a diagnosticar o deploy. */
+export const faltando = [!url && 'VITE_SUPABASE_URL', !key && 'VITE_SUPABASE_ANON_KEY'].filter(Boolean) as string[];
