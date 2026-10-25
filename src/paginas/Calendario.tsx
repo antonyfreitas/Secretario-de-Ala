@@ -6,8 +6,8 @@ import { fd, MESES, soma, ymd } from '../lib/datas';
 import { CAMPOS_PROGRESSO, type Ata } from '../lib/tipos';
 
 export default function Calendario() {
-  const { perfil } = useAuth();
-  const { atas } = useAtas(perfil?.id);
+  const { perfil, nuvem } = useAuth();
+  const { atas, carregando } = useAtas(perfil?.id, nuvem);
   const nav = useNavigate();
   const [mes, setMes] = useState(() => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); });
   const [mais, setMais] = useState(10);
@@ -32,7 +32,7 @@ export default function Calendario() {
     <main>
       <Link className="back" to="/">‹ Início</Link>
       <h1>Calendário de domingos</h1>
-      <p className="mut">Veja quais domingos já têm ata. Toque em um domingo para criar ou abrir a ata dele.</p>
+      <p className="mut">Veja quais domingos já têm ata. Toque em um domingo para criar ou abrir a ata dele.{carregando ? ' Carregando…' : ''}</p>
       <div className="mcal">
         <div className="mhead">
           <button className="nav" type="button" aria-label="Mês anterior" onClick={() => mudaMes(-1)}>‹</button>

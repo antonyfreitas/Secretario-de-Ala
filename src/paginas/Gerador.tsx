@@ -16,10 +16,16 @@ function aparar(d: Dados): Dados {
 }
 
 export default function Gerador() {
-  const { perfil } = useAuth();
+  const { perfil, nuvem } = useAuth();
+  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem);
+  if (carregando) return <main><p className="mut">Carregando…</p></main>;
+  return <Formulario atas={atas} salvar={salvar} />;
+}
+
+function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promise<boolean> }) {
+  const { perfil, nuvem } = useAuth();
   const { id } = useParams();
   const [sp] = useSearchParams();
-  const { atas, salvar } = useAtas(perfil?.id);
   const inicial = id ? atas.find((a) => a.id === id) : undefined;
   const [d, setD] = useState<Dados>(() => (inicial ? limpar(inicial.d) : vazio(sp.get('data') || proxDomingo())));
   const [curId, setCurId] = useState<string | null>(inicial ? inicial.id : null);
@@ -42,7 +48,7 @@ export default function Gerador() {
     }
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     const dd = aparar(d);
     if (dd.semAssuntos) dd.assuntos = '';
     const agora = new Date().toISOString();
@@ -56,11 +62,11 @@ export default function Gerador() {
       r = { v: 1, id: novoId(), criado: agora, atualizado: agora, d: dd };
       a.push(r);
     }
-    if (salvar(a)) {
+    if (await salvar(a)) {
       setCurId(r.id);
-      setMsg({ t: `Ata salva neste aparelho: ${fd(dd.data) || 'sem data'}.`, err: false });
+      setMsg({ t: `Ata salva ${nuvem ? 'na nuvem' : 'neste aparelho'}: ${fd(dd.data) || 'sem data'}.`, err: false });
     } else {
-      setMsg({ t: 'Não foi possível salvar: o navegador bloqueou o armazenamento.', err: true });
+      setMsg({ t: nuvem ? 'Não foi possível salvar. Alguém pode ter alterado esta ata: volte à lista e abra de novo.' : 'Não foi possível salvar: o navegador bloqueou o armazenamento.', err: true });
     }
   };
 
@@ -112,7 +118,7 @@ export default function Gerador() {
         <p className={'stbar' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>
         <div className="barbtn">
           <button className="btn" type="button" onClick={() => { setD(vazio(proxDomingo())); setCurId(null); setMsg({ t: 'Formulário limpo.', err: false }); }}>Limpar</button>
-          {perfil && <button className="btn" type="button" onClick={guardar}>Salvar</button>}
+          {perfil && <button className="btn" type="button" onClick={() => void guardar()}>Salvar</button>}
           <button className="btn p" type="button" onClick={gerar}>Gerar PDF</button>
         </div>
       </div>

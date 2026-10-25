@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { excluirAta, gravarAta, listarAtas } from './nuvem';
 import { limpar, type Ata } from './tipos';
 
 const chave = (uid: string) => `atas.v2:${uid}`;
@@ -28,18 +29,55 @@ export function apagarTudo(uid: string) {
   }
 }
 
-export function useAtas(uid: string | undefined) {
-  const [atas, setAtas] = useState<Ata[]>(() => (uid ? carregar(uid) : []));
+export function useAtas(uid: string | undefined, nuvem = false) {
+  const [atas, setAtas] = useState<Ata[]>(() => (uid && !nuvem ? carregar(uid) : []));
+  const [carregando, setCarregando] = useState(nuvem);
+
+  useEffect(() => {
+    if (!uid) return;
+    if (!nuvem) {
+      setAtas(carregar(uid));
+      setCarregando(false);
+      return;
+    }
+    let vivo = true;
+    setCarregando(true);
+    void listarAtas().then((l) => {
+      if (!vivo) return;
+      if (l) setAtas(l);
+      setCarregando(false);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [uid, nuvem]);
+
   const salvar = useCallback(
-    (a: Ata[]) => {
+    async (nova: Ata[]): Promise<boolean> => {
       if (!uid) return false;
-      const ok = gravar(uid, a);
-      if (ok) setAtas(a);
+      if (!nuvem) {
+        const ok = gravar(uid, nova);
+        if (ok) setAtas(nova);
+        return ok;
+      }
+      const antigo = new Map(atas.map((a) => [a.id, a]));
+      let ok = true;
+      for (const a of nova) {
+        const o = antigo.get(a.id);
+        if (!o || JSON.stringify(o.d) !== JSON.stringify(a.d)) {
+          if ((await gravarAta(a, o?.atualizado)) !== 'ok') ok = false;
+        }
+      }
+      for (const o of atas) {
+        if (!nova.some((a) => a.id === o.id) && !(await excluirAta(o.id))) ok = false;
+      }
+      const l = await listarAtas();
+      if (l) setAtas(l);
       return ok;
     },
-    [uid],
+    [uid, nuvem, atas],
   );
-  return { atas, salvar };
+  return { atas, salvar, carregando };
 }
 
 /** Junta atas vindas de arquivo ou da nuvem: mantém a mais recente de cada id. */

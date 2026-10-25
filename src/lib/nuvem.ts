@@ -1,26 +1,36 @@
 import { supabase } from './supabase';
-import type { Ata } from './tipos';
+import { limpar, type Ata } from './tipos';
 
-export async function enviarBackup(atas: Ata[]): Promise<string | null> {
-  if (!supabase) return 'Servidor não configurado.';
-  const { error } = await supabase.from('backups').insert({ dados: { app: 'secretaria-ala', v: 2, atas } });
-  if (error) return 'Não foi possível enviar o backup.';
-  const { data } = await supabase.from('backups').select('id').order('criado_em', { ascending: false });
-  const extras = (data ?? []).slice(10).map((b) => b.id as string);
-  if (extras.length) await supabase.from('backups').delete().in('id', extras);
-  return null;
+export type Resultado = 'ok' | 'conflito' | 'erro';
+
+export async function listarAtas(): Promise<Ata[] | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('atas_ala').select('id,d,criado_em,atualizado_em').order('data', { ascending: false });
+  if (error) return null;
+  return (data ?? []).map((r) => ({
+    v: 1 as const,
+    id: r.id as string,
+    criado: r.criado_em as string,
+    atualizado: r.atualizado_em as string,
+    d: limpar(r.d),
+  }));
 }
 
-export async function ultimoBackup(): Promise<{ criado: string; atas: unknown[] } | null | 'erro'> {
+/** Sem `anterior`, cria. Com `anterior`, só altera se ninguém mexeu na ata desde então (evita sobrescrever). */
+export async function gravarAta(a: Ata, anterior?: string): Promise<Resultado> {
   if (!supabase) return 'erro';
-  const { data, error } = await supabase
-    .from('backups')
-    .select('dados,criado_em')
-    .order('criado_em', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const campos = { data: a.d.data || null, pronta: a.d.pronta, d: a.d };
+  if (!anterior) {
+    const { error } = await supabase.from('atas_ala').insert({ id: a.id, ...campos });
+    return error ? 'erro' : 'ok';
+  }
+  const { data, error } = await supabase.from('atas_ala').update(campos).eq('id', a.id).eq('atualizado_em', anterior).select('id');
   if (error) return 'erro';
-  if (!data) return null;
-  const a = (data.dados as { atas?: unknown[] }).atas;
-  return { criado: data.criado_em as string, atas: Array.isArray(a) ? a : [] };
+  return data && data.length ? 'ok' : 'conflito';
+}
+
+export async function excluirAta(id: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('atas_ala').delete().eq('id', id);
+  return !error;
 }
