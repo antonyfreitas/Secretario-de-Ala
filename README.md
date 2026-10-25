@@ -1,22 +1,30 @@
 # Secretaria da Ala Ipanema
 
-Site de página única (`index.html`) com gerador de atas, calendário de domingos e acompanhamento das atualizações do Manual.
+Site em React + TypeScript (Vite). Gerador de atas aberto a todos; salvar atas e os demais recursos exigem login.
 
-## Publicar (uma vez)
+## Estrutura
 
-1. Crie um repositório **público** no GitHub e suba estes arquivos, mantendo as pastas.
-2. **Settings → Pages:** *Deploy from a branch*, branch `main`, pasta `/ (root)`.
-3. **Settings → Actions → General → Workflow permissions:** *Read and write permissions*.
-4. **Actions → Verificar Manual → Run workflow** (primeira execução, à mão).
-5. Domínio próprio: **Settings → Pages → Custom domain**, e o registro CNAME no DNS do domínio.
+- `src/` — o aplicativo (rotas com histórico: o botão Voltar do navegador funciona).
+- `supabase/migrations/` — esquema do banco com RLS (políticas de acesso por usuário).
+- `public/data/manual-status.json` — gravado toda segunda pelo monitor do Manual (só mês e hash; nenhum texto).
+- `scripts/` e `.github/workflows/` — o monitor do Manual.
+- `legacy/index.html` — versão antiga em arquivo único (só para consulta).
 
-## O que o monitor faz
+## Segurança
 
-- Toda segunda, às 06:17 (Brasília), lê **uma vez** o Sumário de atualizações recentes, depois de conferir o `robots.txt`.
-- Grava em `data/manual-status.json` só o mês mais recente, a data e um código de comparação (hash). **Nenhum texto do Manual é guardado.**
-- Se a execução falhar (página mudou, idioma diferente, bloqueio), o GitHub avisa por e-mail e a página continua funcionando na conferência manual.
+- Chave pública do Supabase no navegador por desenho; os dados são protegidos pelo RLS no banco.
+- Sem cadastro aberto: usuários são criados pelo administrador. Sem perfil ativo, não há acesso a nada.
+- Cabeçalhos em `vercel.json` (CSP restrita, HSTS, sem iframe, sem referrer).
+- Sessão encerra sozinha após 30 minutos parada.
+- Backup na nuvem **desligado por padrão**; só o administrador liga (nomes de membros ficam fora do aparelho).
+- Nunca suba dados de membros ao repositório. Segredos só em variáveis de ambiente.
 
-## Regras do projeto
+## Configuração
 
-- Nunca suba dados de membros ao repositório (nem privado). Backups das atas ficam em arquivo, fora do GitHub.
-- O código é público de propósito: não contém dados. Os dados de cada pessoa ficam no aparelho dela.
+Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Na Vercel, as mesmas duas variáveis em Settings → Environment Variables.
+
+```
+npm install
+npm run dev     # desenvolvimento
+npm run build   # verifica tipos e gera dist/
+```

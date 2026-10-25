@@ -18,8 +18,8 @@ from pathlib import Path
 URL = "https://www.churchofjesuschrist.org/study/manual/general-handbook/summary-of-recent-updates?lang=por"
 ROBOTS = "https://www.churchofjesuschrist.org/robots.txt"
 UA = "secretaria-ala-monitor/1.0 (verificacao semanal de uma pagina publica; uso pessoal)"
-OUT = Path("data/manual-status.json")
-ERRO = Path("data/manual-erro.json")
+OUT = Path("public/data/manual-status.json")
+ERRO = Path("public/data/manual-erro.json")
 MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
          "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
 RXM = re.compile(r"(" + "|".join(MESES) + r")\s+(?:de\s+)?(20\d\d)", re.I)

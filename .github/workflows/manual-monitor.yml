@@ -24,7 +24,7 @@ jobs:
         run: |
           git config user.name "manual-monitor"
           git config user.email "manual-monitor@users.noreply.github.com"
-          git add -A data
+          git add -A public/data
           git diff --cached --quiet || (git commit -m "Manual: verificação $(date -u +%F)" && git push)
       - name: Pedir a publicação do site
         if: always()
