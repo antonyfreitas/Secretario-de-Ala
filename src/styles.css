@@ -95,3 +95,7 @@ select{display:block;width:100%;box-sizing:border-box;border:0;border-bottom:2px
 select option{color:#000}
 .ln .acts{margin:0}
 .ln{flex-wrap:wrap}
+.dia.rev{background:#4B7BE5;border-color:#4B7BE5;color:#fff;cursor:pointer;opacity:1;font-weight:700}
+.dot.rev{background:#4B7BE5}
+.row.rev{border-left:4px solid #4B7BE5;padding-left:10px}
+fieldset:disabled{opacity:.75}

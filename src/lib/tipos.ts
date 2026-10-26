@@ -6,7 +6,17 @@ export interface Dados {
   incluirOr: boolean; semAssuntos: boolean; pronta: boolean;
 }
 export type ChaveTexto = Exclude<keyof Dados, 'incluirOr' | 'semAssuntos' | 'pronta'>;
-export interface Ata { v: 1; id: string; criado: string; atualizado: string; d: Dados }
+export type Situacao = 'rascunho' | 'em_revisao' | 'aprovada';
+export const ROTULO_SITUACAO: Record<Situacao, string> = { rascunho: 'Rascunho', em_revisao: 'Em revisão', aprovada: 'Aprovada' };
+export interface Ata {
+  v: 1; id: string; criado: string; atualizado: string; d: Dados;
+  status?: Situacao; versao?: number; comentario?: string | null;
+  enviadaPor?: string | null; enviadaPorNome?: string | null; aprovadaPorNome?: string | null; aprovadaEm?: string | null;
+}
+export type EstadoAta = 'pronta' | 'revisao' | 'rascunho';
+/** Na nuvem a cor segue a aprovação; no aparelho, a marcação "pronta" do formulário. */
+export const estadoAta = (a: Ata): EstadoAta =>
+  a.status ? (a.status === 'aprovada' ? 'pronta' : a.status === 'em_revisao' ? 'revisao' : 'rascunho') : a.d.pronta ? 'pronta' : 'rascunho';
 
 export const CHAVES: ChaveTexto[] = [
   'ala', 'data', 'freq', 'presidida', 'dirigida', 'regente', 'pianista', 'boasvindas', 'anuncios',

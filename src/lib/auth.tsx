@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
 
-export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'user'; ativo: boolean }
+export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'aprovador' | 'user'; ativo: boolean }
 interface Ctx {
   carregando: boolean;
   perfil: Perfil | null;
@@ -10,6 +10,8 @@ interface Ctx {
   sair: () => Promise<void>;
   recarregarNuvem: () => Promise<void>;
 }
+
+export const ROTULO_PAPEL: Record<string, string> = { admin: 'administrador', aprovador: 'aprovador (bispado)', user: 'usuário' };
 
 const AuthCtx = createContext<Ctx | null>(null);
 export const useAuth = () => {

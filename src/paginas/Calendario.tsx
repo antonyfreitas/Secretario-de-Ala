@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
 import { fd, MESES, soma, ymd } from '../lib/datas';
-import { CAMPOS_PROGRESSO, type Ata } from '../lib/tipos';
+import { CAMPOS_PROGRESSO, estadoAta, type Ata } from '../lib/tipos';
+
+const CL = { pronta: ' ok', revisao: ' rev', rascunho: ' draft' };
+const TX = { pronta: 'pronta', revisao: 'em revisão', rascunho: 'em rascunho' };
 
 export default function Calendario() {
   const { perfil, nuvem } = useAuth();
@@ -50,22 +53,23 @@ export default function Calendario() {
             const k = ymd(t);
             const dom = t.getDay() === 0;
             const r = doDia(k);
-            const cls = 'dia' + (dom ? ' dom' : '') + (r ? (r.d.pronta ? ' ok' : ' draft') : '') + (k === hj ? ' hj' : '') + (dom && !r && k < hj ? ' pas' : '');
-            const rot = fd(k) + (r ? (r.d.pronta ? ', ata pronta' : ', ata em rascunho') : dom ? ', sem ata' : '');
+            const cls = 'dia' + (dom ? ' dom' : '') + (r ? CL[estadoAta(r)] : '') + (k === hj ? ' hj' : '') + (dom && !r && k < hj ? ' pas' : '');
+            const rot = fd(k) + (r ? `, ata ${TX[estadoAta(r)]}` : dom ? ', sem ata' : '');
             return dom || r
               ? <button key={k} type="button" className={cls} aria-label={rot} onClick={() => abrir(k, r)}>{i + 1}</button>
               : <span key={k} className={cls}>{i + 1}</span>;
           })}
         </div>
-        <p className="leg"><span><i className="dot ok" />Pronta</span><span><i className="dot draft" />Rascunho</span><span><i className="dot vaz" />Sem ata</span></p>
+        <p className="leg"><span><i className="dot ok" />Pronta</span><span><i className="dot draft" />Rascunho</span><span><i className="dot rev" />Em revisão</span><span><i className="dot vaz" />Sem ata</span></p>
       </div>
       <div>
         {linhas.map((k) => {
           const r = doDia(k);
           const passado = k < hj;
           const n = r ? CAMPOS_PROGRESSO.filter((c) => r.d[c]).length : 0;
-          const st = !r ? (passado ? 'Sem ata' : 'Vazio') : r.d.pronta ? 'Pronta' : `Rascunho · ${n}/${CAMPOS_PROGRESSO.length} campos`;
-          const cls = 'row' + (r ? (r.d.pronta ? ' ok' : ' draft') : '') + (passado && k !== hj ? ' past' : '');
+          const e = r ? estadoAta(r) : null;
+          const st = !r ? (passado ? 'Sem ata' : 'Vazio') : e === 'pronta' ? 'Pronta' : e === 'revisao' ? 'Em revisão' : `Rascunho · ${n}/${CAMPOS_PROGRESSO.length} campos`;
+          const cls = 'row' + (r ? CL[estadoAta(r)] : '') + (passado && k !== hj ? ' past' : '');
           return (
             <div key={k} className={cls}>
               <button className="open" type="button" onClick={() => abrir(k, r)}>

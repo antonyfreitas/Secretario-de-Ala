@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apagarTudo } from '../lib/armazem';
-import { useAuth } from '../lib/auth';
+import { ROTULO_PAPEL, useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
 export default function Conta() {
@@ -36,7 +36,7 @@ export default function Conta() {
     <main>
       <Link className="back" to="/">‹ Início</Link>
       <h1>Minha conta</h1>
-      <p className="mut">Usuário: <b>{perfil?.usuario}</b> ({perfil?.role === 'admin' ? 'administrador' : 'usuário'})</p>
+      <p className="mut">Usuário: <b>{perfil?.usuario}</b> ({perfil ? ROTULO_PAPEL[perfil.role] : ''})</p>
       <fieldset><legend>Trocar a senha</legend>
         <form className="col" onSubmit={trocar}>
           <div><label htmlFor="n">Nova senha (12 caracteres ou mais)</label><input id="n" type="password" autoComplete="new-password" value={nova} onChange={(e) => setNova(e.target.value)} /></div>

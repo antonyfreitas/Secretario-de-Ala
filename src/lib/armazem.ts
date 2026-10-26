@@ -77,7 +77,11 @@ export function useAtas(uid: string | undefined, nuvem = false) {
     },
     [uid, nuvem, atas],
   );
-  return { atas, salvar, carregando };
+  const recarregar = useCallback(async () => {
+    const l = await listarAtas();
+    if (l) setAtas(l);
+  }, []);
+  return { atas, salvar, carregando, recarregar };
 }
 
 /** Junta atas vindas de arquivo ou da nuvem: mantém a mais recente de cada id. */

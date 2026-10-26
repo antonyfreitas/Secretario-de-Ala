@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth, type Perfil } from '../lib/auth';
+import { ROTULO_PAPEL, useAuth, type Perfil } from '../lib/auth';
 import { fd, mesTxt } from '../lib/datas';
 import { useManual } from '../lib/manual';
 import { gerarSenha } from '../lib/senha';
@@ -92,12 +92,12 @@ export default function Admin() {
           <form className="col" key={p.id} onSubmit={(e) => void salvarEdicao(e)}>
             <div><label htmlFor="eu">Usuário (é o login)</label><input id="eu" type="text" autoCapitalize="none" autoComplete="off" value={ed.usuario} onChange={(e) => setEd({ ...ed, usuario: e.target.value })} required /></div>
             <div><label htmlFor="en">Nome</label><input id="en" type="text" autoComplete="off" value={ed.nome} onChange={(e) => setEd({ ...ed, nome: e.target.value })} /></div>
-            <div><label htmlFor="er">Papel</label><select id="er" value={ed.role} onChange={(e) => setEd({ ...ed, role: e.target.value })}><option value="user">Usuário</option><option value="admin">Administrador</option></select></div>
+            <div><label htmlFor="er">Papel</label><select id="er" value={ed.role} onChange={(e) => setEd({ ...ed, role: e.target.value })}><option value="user">Usuário</option><option value="aprovador">Aprovador (bispado)</option><option value="admin">Administrador</option></select></div>
             <div className="acts"><button className="btn" type="button" onClick={() => setEd(null)}>Cancelar</button><button className="btn p" type="submit">Salvar alterações</button></div>
           </form>
         ) : (
           <div className="ln" key={p.id}>
-            <div><b>{p.usuario}</b> <span>{p.role === 'admin' ? 'administrador' : 'usuário'}{p.nome ? ` · ${p.nome}` : ''}{p.ativo ? '' : ' · desativado'}</span></div>
+            <div><b>{p.usuario}</b> <span>{ROTULO_PAPEL[p.role]}{p.nome ? ` · ${p.nome}` : ''}{p.ativo ? '' : ' · desativado'}</span></div>
             <div className="acts">
               <button className="btn sw" type="button" onClick={() => setEd({ id: p.id, usuario: p.usuario, nome: p.nome, role: p.role })}>Editar</button>
               <button className="btn sw" type="button" onClick={() => void redefinir(p)}>Nova senha</button>
@@ -113,7 +113,7 @@ export default function Admin() {
         <form className="col" onSubmit={criar}>
           <div><label htmlFor="nu">Usuário (letras minúsculas, números, ponto ou traço)</label><input id="nu" type="text" autoCapitalize="none" autoComplete="off" value={novo.usuario} onChange={(e) => setNovo({ ...novo, usuario: e.target.value })} required /></div>
           <div><label htmlFor="nn">Nome (opcional)</label><input id="nn" type="text" autoComplete="off" value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></div>
-          <div><label htmlFor="nr">Papel</label><select id="nr" value={novo.role} onChange={(e) => setNovo({ ...novo, role: e.target.value })}><option value="user">Usuário</option><option value="admin">Administrador</option></select></div>
+          <div><label htmlFor="nr">Papel</label><select id="nr" value={novo.role} onChange={(e) => setNovo({ ...novo, role: e.target.value })}><option value="user">Usuário</option><option value="aprovador">Aprovador (bispado)</option><option value="admin">Administrador</option></select></div>
           <div><label htmlFor="ns">Senha inicial</label><input id="ns" type="text" autoComplete="off" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} required minLength={12} /></div>
           <div className="acts"><button className="btn" type="button" onClick={() => setNovo({ ...novo, senha: gerarSenha() })}>Gerar outra senha</button><button className="btn p" type="submit">Criar usuário</button></div>
         </form>
