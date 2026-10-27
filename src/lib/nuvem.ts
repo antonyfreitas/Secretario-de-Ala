@@ -1,11 +1,12 @@
 import { supabase } from './supabase';
-import { limpar, type Ata, type Dados, type Situacao } from './tipos';
+import { limpar, type Ata, type Dados } from './tipos';
 
 export type Resultado = 'ok' | 'conflito' | 'erro';
-export type Acao = 'enviar_para_revisao' | 'aprovar_ata' | 'devolver_ata' | 'reabrir_ata';
-export interface Versao { versao: number; aprovadaEm: string; aprovadaPorNome: string | null; hash: string; d: Dados }
+export interface Org { id: string; nome: string; nuvem: boolean }
+export interface Destinatario { id: string; org_id: string; nome: string; papel: string; email: string | null; whatsapp: string | null }
+export interface Edicao { em: string; por: string | null; d: Dados }
 
-const COLUNAS = 'id,d,criado_em,atualizado_em,status,versao,comentario,enviada_por,enviada_por_nome,aprovada_por_nome,aprovada_em';
+const COLUNAS = 'id,d,criado_em,atualizado_em,atualizado_por_nome,org_id';
 
 export async function listarAtas(): Promise<Ata[] | null> {
   if (!supabase) return null;
@@ -17,13 +18,8 @@ export async function listarAtas(): Promise<Ata[] | null> {
     criado: r.criado_em as string,
     atualizado: r.atualizado_em as string,
     d: limpar(r.d),
-    status: r.status as Situacao,
-    versao: r.versao as number,
-    comentario: (r.comentario as string | null) ?? null,
-    enviadaPor: (r.enviada_por as string | null) ?? null,
-    enviadaPorNome: (r.enviada_por_nome as string | null) ?? null,
-    aprovadaPorNome: (r.aprovada_por_nome as string | null) ?? null,
-    aprovadaEm: (r.aprovada_em as string | null) ?? null,
+    orgId: r.org_id as string,
+    atualizadoPorNome: (r.atualizado_por_nome as string | null) ?? null,
   }));
 }
 
@@ -32,7 +28,7 @@ export async function gravarAta(a: Ata, anterior?: string): Promise<Resultado> {
   if (!supabase) return 'erro';
   const campos = { data: a.d.data || null, pronta: a.d.pronta, d: a.d };
   if (!anterior) {
-    const { error } = await supabase.from('atas_ala').insert({ id: a.id, ...campos });
+    const { error } = await supabase.from('atas_ala').insert({ id: a.id, ...campos, ...(a.orgId ? { org_id: a.orgId } : {}) });
     return error ? 'erro' : 'ok';
   }
   const { data, error } = await supabase.from('atas_ala').update(campos).eq('id', a.id).eq('atualizado_em', anterior).select('id');
@@ -46,22 +42,20 @@ export async function excluirAta(id: string): Promise<boolean> {
   return !error;
 }
 
-/** Enviar para revisão, aprovar, devolver ou reabrir. Retorna a mensagem de erro, ou null se deu certo. */
-export async function acaoAta(acao: Acao, id: string, motivo?: string): Promise<string | null> {
-  if (!supabase) return 'servidor não configurado';
-  const args = acao === 'devolver_ata' ? { p_id: id, p_motivo: motivo ?? '' } : { p_id: id };
-  const { error } = await supabase.rpc(acao, args);
-  return error ? error.message : null;
+export async function listarHistorico(id: string): Promise<Edicao[]> {
+  if (!supabase) return [];
+  const { data } = await supabase.from('atas_historico').select('d,editado_em,editado_por_nome').eq('ata_id', id).order('editado_em', { ascending: false });
+  return (data ?? []).map((r) => ({ em: r.editado_em as string, por: (r.editado_por_nome as string | null) ?? null, d: limpar(r.d) }));
 }
 
-export async function listarVersoes(id: string): Promise<Versao[]> {
+export async function listarOrgs(): Promise<Org[]> {
   if (!supabase) return [];
-  const { data } = await supabase.from('atas_versoes').select('versao,d,hash,aprovada_em,aprovada_por_nome').eq('ata_id', id).order('versao', { ascending: false });
-  return (data ?? []).map((r) => ({
-    versao: r.versao as number,
-    aprovadaEm: r.aprovada_em as string,
-    aprovadaPorNome: (r.aprovada_por_nome as string | null) ?? null,
-    hash: r.hash as string,
-    d: limpar(r.d),
-  }));
+  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa').order('nome');
+  return (data ?? []).map((r) => ({ id: r.id as string, nome: r.nome as string, nuvem: r.nuvem_ativa === true }));
+}
+
+export async function listarDestinatarios(orgId: string): Promise<Destinatario[]> {
+  if (!supabase || !orgId) return [];
+  const { data } = await supabase.from('destinatarios').select('id,org_id,nome,papel,email,whatsapp').eq('org_id', orgId).order('criado_em');
+  return (data ?? []) as Destinatario[];
 }

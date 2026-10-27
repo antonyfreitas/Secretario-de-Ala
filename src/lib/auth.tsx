@@ -1,17 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
 
-export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'aprovador' | 'user'; ativo: boolean }
+export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'org_admin' | 'user'; ativo: boolean; org_id: string | null }
+export interface OrgAtual { id: string; nome: string; nuvem: boolean }
 interface Ctx {
   carregando: boolean;
   perfil: Perfil | null;
+  org: OrgAtual | null;
   nuvem: boolean;
   entrar: (usuario: string, senha: string) => Promise<string | null>;
   sair: () => Promise<void>;
   recarregarNuvem: () => Promise<void>;
 }
 
-export const ROTULO_PAPEL: Record<string, string> = { admin: 'administrador', aprovador: 'aprovador (bispado)', user: 'usuário' };
+export const ROTULO_PAPEL: Record<string, string> = { admin: 'administrador geral', org_admin: 'administrador da ala', user: 'usuário' };
 
 const AuthCtx = createContext<Ctx | null>(null);
 export const useAuth = () => {
@@ -28,23 +30,23 @@ async function buscarPerfil(): Promise<Perfil | null> {
   if (!supabase) return null;
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
-  const { data } = await supabase.from('profiles').select('id,usuario,nome,role,ativo').eq('id', u.user.id).maybeSingle();
+  const { data } = await supabase.from('profiles').select('id,usuario,nome,role,ativo,org_id').eq('id', u.user.id).maybeSingle();
   return data && data.ativo ? (data as Perfil) : null;
 }
-async function buscarNuvem(): Promise<boolean> {
-  if (!supabase) return false;
-  const { data } = await supabase.from('config').select('valor').eq('chave', 'nuvem_ativa').maybeSingle();
-  return data?.valor === true;
+async function buscarOrg(p: Perfil | null): Promise<OrgAtual | null> {
+  if (!supabase || !p?.org_id) return null;
+  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa').eq('id', p.org_id).maybeSingle();
+  return data ? { id: data.id as string, nome: data.nome as string, nuvem: data.nuvem_ativa === true } : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
-  const [nuvem, setNuvem] = useState(false);
+  const [org, setOrg] = useState<OrgAtual | null>(null);
 
   const sair = useCallback(async () => {
     setPerfil(null);
-    setNuvem(false);
+    setOrg(null);
     await supabase?.auth.signOut();
   }, []);
 
@@ -58,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!vivo) return;
           if (p) {
             setPerfil(p);
-            setNuvem(await buscarNuvem());
+            setOrg(await buscarOrg(p));
           } else {
             await supabase.auth.signOut();
           }
@@ -97,11 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return 'Este usuário não tem acesso ativo.';
     }
     setPerfil(p);
-    setNuvem(await buscarNuvem());
+    setOrg(await buscarOrg(p));
     return null;
   }, []);
 
-  const recarregarNuvem = useCallback(async () => setNuvem(await buscarNuvem()), []);
+  const recarregarNuvem = useCallback(async () => setOrg(await buscarOrg(perfil)), [perfil]);
 
-  return <AuthCtx.Provider value={{ carregando, perfil, nuvem, entrar, sair, recarregarNuvem }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ carregando, perfil, org, nuvem: org?.nuvem ?? false, entrar, sair, recarregarNuvem }}>{children}</AuthCtx.Provider>;
 }

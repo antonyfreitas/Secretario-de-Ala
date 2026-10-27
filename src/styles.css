@@ -99,3 +99,10 @@ select option{color:#000}
 .dot.rev{background:#4B7BE5}
 .row.rev{border-left:4px solid #4B7BE5;padding-left:10px}
 fieldset:disabled{opacity:.75}
+.mcal{max-width:340px;margin:12px auto 10px}
+.mhead b{font-size:1.05rem}
+.nav{width:38px;height:38px;font-size:1.2rem}
+.gsem,.grade{gap:3px}
+.dia{font-size:.85rem}
+.leg{font-size:.8rem;gap:12px}
+summary{cursor:pointer;min-height:32px}

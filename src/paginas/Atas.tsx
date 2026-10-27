@@ -4,7 +4,6 @@ import { baixar } from '../lib/arquivo';
 import { carregar, mesclar, novoId, useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
 import { fd, quando, soma } from '../lib/datas';
-import { ROTULO_SITUACAO } from '../lib/tipos';
 
 export default function Atas() {
   const { perfil, nuvem } = useAuth();
@@ -81,7 +80,7 @@ export default function Atas() {
           <div className="row" key={r.id}>
             <button className="open" type="button" onClick={() => nav(`/atas/${r.id}`)}>
               <b>{fd(r.d.data) || 'Sem data'}</b>
-              <span>{(r.d.dirigida ? `Dirigida: ${r.d.dirigida} · ` : '') + `Atualizada em ${quando(r.atualizado)}` + (nuvem && r.status ? ` · ${ROTULO_SITUACAO[r.status]}` : '')}</span>
+              <span>{(r.d.dirigida ? `Dirigida: ${r.d.dirigida} · ` : '') + `Atualizada em ${quando(r.atualizado)}` + (nuvem && r.atualizadoPorNome ? ` por ${r.atualizadoPorNome}` : '')}</span>
             </button>
             <div className="ra">
               <button type="button" onClick={() => void duplicar(r.id)}>Duplicar</button>

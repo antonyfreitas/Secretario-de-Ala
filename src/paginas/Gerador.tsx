@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import Enviar from '../componentes/Enviar';
 import HinoInput from '../componentes/HinoInput';
 import { baixar, slug } from '../lib/arquivo';
 import { novoId, useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
 import { fd, proxDomingo, quando } from '../lib/datas';
 import { SECOES } from '../lib/formulario';
-import { acaoAta, listarVersoes, type Acao, type Versao } from '../lib/nuvem';
+import { listarHistorico, listarOrgs, type Edicao, type Org } from '../lib/nuvem';
 import { fit } from '../lib/pdf';
-import { CHAVES, ROTULO_SITUACAO, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
+import { CHAVES, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
 
 function aparar(d: Dados): Dados {
   const o = { ...d };
@@ -18,12 +19,12 @@ function aparar(d: Dados): Dados {
 
 export default function Gerador() {
   const { perfil, nuvem } = useAuth();
-  const { atas, salvar, carregando, recarregar } = useAtas(perfil?.id, nuvem);
+  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem);
   if (carregando) return <main><p className="mut">Carregando…</p></main>;
-  return <Formulario atas={atas} salvar={salvar} recarregar={recarregar} />;
+  return <Formulario atas={atas} salvar={salvar} />;
 }
 
-function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata[]) => Promise<boolean>; recarregar: () => Promise<void> }) {
+function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promise<boolean> }) {
   const { perfil, nuvem } = useAuth();
   const { id } = useParams();
   const [sp] = useSearchParams();
@@ -31,30 +32,43 @@ function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata
   const [d, setD] = useState<Dados>(() => (inicial ? limpar(inicial.d) : vazio(sp.get('data') || proxDomingo())));
   const [curId, setCurId] = useState<string | null>(inicial ? inicial.id : null);
   const [msg, setMsg] = useState({ t: '', err: false });
-  const [motivo, setMotivo] = useState('');
-  const [versoes, setVersoes] = useState<Versao[]>([]);
+  const [historico, setHistorico] = useState<Edicao[]>([]);
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [orgSel, setOrgSel] = useState(inicial?.orgId ?? perfil?.org_id ?? '');
   const atual = curId ? atas.find((a) => a.id === curId) : undefined;
-  const status = nuvem && atual?.status ? atual.status : 'rascunho';
-  const bloqueada = status !== 'rascunho';
-  const podeAprovar = perfil?.role === 'admin' || perfil?.role === 'aprovador';
-  const euEnviei = !!atual && atual.enviadaPor === perfil?.id;
+  const global = perfil?.role === 'admin';
   const set = (k: keyof Dados, v: string | boolean) => setD((x) => ({ ...x, [k]: v }));
 
   useEffect(() => {
-    if (!nuvem || !curId || !atual?.status) return;
+    if (!nuvem || !global) return;
     let vivo = true;
-    void listarVersoes(curId).then((v) => { if (vivo) setVersoes(v); });
+    void listarOrgs().then((l) => { if (vivo) setOrgs(l.filter((o) => o.nuvem)); });
     return () => { vivo = false; };
-  }, [nuvem, curId, atual?.status, atual?.versao]);
+  }, [nuvem, global]);
+
+  useEffect(() => {
+    if (!nuvem || !curId) return;
+    let vivo = true;
+    void listarHistorico(curId).then((h) => { if (vivo) setHistorico(h); });
+    return () => { vivo = false; };
+  }, [nuvem, curId, atual?.atualizado]);
 
   if (id && !inicial) {
     return <main><Link className="back" to="/atas">‹ Atas salvas</Link><h1>Ata não encontrada</h1></main>;
   }
 
+  const nomePdf = (x: Dados, sufixo = '') => `ata-ala-${slug(x.ala)}-${x.data || 'sem-data'}${sufixo}.pdf`;
+  const blobPdf = (x: Dados): Blob | null => {
+    try {
+      return fit(aparar(x))!.doc.output('blob');
+    } catch {
+      return null;
+    }
+  };
   const baixarPdf = (x: Dados, sufixo = '') => {
     try {
       const r = fit(aparar(x))!;
-      const nome = `ata-ala-${slug(x.ala)}-${x.data || 'sem-data'}${sufixo}.pdf`;
+      const nome = nomePdf(x, sufixo);
       baixar(r.doc.output('blob'), nome);
       const nota = r.over ? ' Atenção: conteúdo demais, parte pode ter ficado de fora.' : r.s < 0.8 ? ' Letras reduzidas para caber em 1 folha.' : '';
       setMsg({ t: `PDF pronto: ${nome}.${nota}`, err: false });
@@ -63,7 +77,7 @@ function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata
     }
   };
 
-  const guardar = async (): Promise<string | null> => {
+  const guardar = async () => {
     const dd = aparar(d);
     if (dd.semAssuntos) dd.assuntos = '';
     const agora = new Date().toISOString();
@@ -74,29 +88,18 @@ function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata
       r = { ...a[i], d: dd, atualizado: agora };
       a[i] = r;
     } else {
-      r = { v: 1, id: novoId(), criado: agora, atualizado: agora, d: dd };
+      r = { v: 1, id: novoId(), criado: agora, atualizado: agora, d: dd, ...(global && orgSel ? { orgId: orgSel } : {}) };
       a.push(r);
     }
     if (await salvar(a)) {
       setCurId(r.id);
       setMsg({ t: `Ata salva ${nuvem ? 'na nuvem' : 'neste aparelho'}: ${fd(dd.data) || 'sem data'}.`, err: false });
-      return r.id;
+    } else {
+      setMsg({ t: nuvem ? 'Não foi possível salvar. Alguém pode ter alterado esta ata: volte à lista e abra de novo.' : 'Não foi possível salvar: o navegador bloqueou o armazenamento.', err: true });
     }
-    setMsg({ t: nuvem ? 'Não foi possível salvar. Alguém pode ter alterado esta ata: volte à lista e abra de novo.' : 'Não foi possível salvar: o navegador bloqueou o armazenamento.', err: true });
-    return null;
   };
 
-  const rodar = async (acao: Acao, texto: string, alvo: string | null) => {
-    if (!alvo) return;
-    const e = await acaoAta(acao, alvo, motivo);
-    await recarregar();
-    setMotivo('');
-    setMsg({ t: e ? `Não foi possível: ${e}.` : texto, err: Boolean(e) });
-  };
-  const enviar = async () => {
-    const alvo = await guardar();
-    await rodar('enviar_para_revisao', 'Enviada para aprovação. Fica bloqueada até ser aprovada ou devolvida.', alvo);
-  };
+  const titulo = `Ata da reunião sacramental de ${fd(d.data) || 'data a definir'} - Ala ${d.ala}`;
 
   return (
     <main>
@@ -107,42 +110,31 @@ function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata
         {!perfil && ' Sem login, nada é salvo: o que você digita some ao fechar a página.'}
       </p>
 
-      {nuvem && atual && (
-        <div className="card">
-          <p><b>Situação:</b> {ROTULO_SITUACAO[status]}{atual.versao && atual.versao > 1 ? ` · versão ${atual.versao}` : ''}</p>
-          {status === 'rascunho' && atual.comentario && <p><b>Devolvida:</b> {atual.comentario}</p>}
-          {status === 'em_revisao' && <p>Enviada por {atual.enviadaPorNome ?? 'alguém'} para aprovação. Está bloqueada para edição.</p>}
-          {status === 'aprovada' && <p>Aprovada por {atual.aprovadaPorNome ?? 'um aprovador'} em {quando(atual.aprovadaEm ?? '')}. Para alterar, é preciso reabrir; a próxima aprovação vira a versão seguinte.</p>}
-          {status === 'em_revisao' && podeAprovar && !euEnviei && (
-            <div><label htmlFor="mot">Motivo da devolução (opcional)</label><textarea id="mot" value={motivo} onChange={(e) => setMotivo(e.target.value)} /></div>
-          )}
-          <div className="acts">
-            {status === 'rascunho' && <button className="btn" type="button" onClick={() => void enviar()}>Enviar para aprovação</button>}
-            {status === 'em_revisao' && podeAprovar && !euEnviei && <button className="btn p" type="button" onClick={() => void rodar('aprovar_ata', 'Ata aprovada e registrada no histórico.', curId)}>Aprovar</button>}
-            {status === 'em_revisao' && (podeAprovar || euEnviei) && <button className="btn" type="button" onClick={() => void rodar('devolver_ata', euEnviei ? 'Retirada da revisão.' : 'Ata devolvida para ajustes.', curId)}>{euEnviei ? 'Retirar da revisão' : 'Devolver'}</button>}
-            {status === 'aprovada' && podeAprovar && <button className="btn" type="button" onClick={() => void rodar('reabrir_ata', 'Ata reaberta para edição.', curId)}>Reabrir para edição</button>}
-          </div>
-          {versoes.length > 0 && (
-            <div>
-              <p className="sub">Versões aprovadas</p>
-              {versoes.map((v) => (
-                <div className="ln" key={v.versao}>
-                  <span>v{v.versao} · {v.aprovadaPorNome ?? 'aprovador'} · {quando(v.aprovadaEm)} · {v.hash.slice(0, 8)}</span>
-                  <button className="btn sw" type="button" onClick={() => baixarPdf(v.d, `-v${v.versao}`)}>PDF desta versão</button>
-                </div>
-              ))}
+      {nuvem && global && !curId && orgs.length > 1 && (
+        <div className="g"><div className="wide"><label htmlFor="org">Salvar na ala</label>
+          <select id="org" value={orgSel} onChange={(e) => setOrgSel(e.target.value)}>{orgs.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}</select></div></div>
+      )}
+
+      {nuvem && atual?.atualizadoPorNome && <p className="sub">Última edição por <b>{atual.atualizadoPorNome}</b> em {quando(atual.atualizado)}.</p>}
+      {nuvem && historico.length > 1 && (
+        <details className="card">
+          <summary><b>Histórico de edições ({historico.length})</b></summary>
+          {historico.map((h) => (
+            <div className="ln" key={h.em}>
+              <span>{quando(h.em)} · {h.por ?? 'usuário'}</span>
+              <button className="btn sw" type="button" onClick={() => baixarPdf(h.d, `-${h.em.slice(0, 16).replace(/[^0-9]/g, '')}`)}>PDF desta versão</button>
             </div>
-          )}
-        </div>
+          ))}
+        </details>
       )}
 
       <form onSubmit={(e) => e.preventDefault()}>
-        {SECOES.map(([titulo, campos]) => {
+        {SECOES.map(([secao, campos]) => {
           const vis = campos.filter((c) => !c.soLogado || perfil);
           if (!vis.length) return null;
           return (
-            <fieldset key={titulo} disabled={bloqueada}>
-              <legend>{titulo}</legend>
+            <fieldset key={secao}>
+              <legend>{secao}</legend>
               <div className="g">
                 {vis.map((c) => {
                   if (c.tipo === 'check') {
@@ -172,11 +164,14 @@ function Formulario({ atas, salvar, recarregar }: { atas: Ata[]; salvar: (a: Ata
           );
         })}
       </form>
+
+      <Enviar gerar={() => blobPdf(d)} nome={nomePdf(d)} titulo={titulo} orgId={atual?.orgId ?? (orgSel || undefined)} nuvem={nuvem} />
+
       <div className="bar">
         <p className={'stbar' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>
         <div className="barbtn">
-          {!bloqueada && <button className="btn" type="button" onClick={() => { setD(vazio(proxDomingo())); setCurId(null); setMsg({ t: 'Formulário limpo.', err: false }); }}>Limpar</button>}
-          {perfil && !bloqueada && <button className="btn" type="button" onClick={() => void guardar()}>Salvar</button>}
+          <button className="btn" type="button" onClick={() => { setD(vazio(proxDomingo())); setCurId(null); setMsg({ t: 'Formulário limpo.', err: false }); }}>Limpar</button>
+          {perfil && <button className="btn" type="button" onClick={() => void guardar()}>Salvar</button>}
           <button className="btn p" type="button" onClick={() => baixarPdf(d)}>Gerar PDF</button>
         </div>
       </div>

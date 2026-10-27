@@ -286,7 +286,10 @@ const RAW: [string, string][] = [
   ["1207", "Noite de paz"],
   ["1208", "Ao mundo proclamai"],
   ["1209", "Bebezinho no presépio"],
-  ["1210", "Os jardins"]
+  ["1210", "Os jardins"],
+  ["", "Apresentação Especial"],
+  ["", "Apresentação do Coral"],
+  ["", "Hino Especial"]
 ];
 
 export const nz = (s: string) =>

@@ -15,7 +15,7 @@ export default function HinoInput({ id, valor, aoMudar }: Props) {
     setSug(r.sort((a, b) => Number(b.n === q) - Number(a.n === q) || Number(a.n) - Number(b.n)).slice(0, 8));
   };
   const escolher = (h: Hino) => {
-    aoMudar(`${h.n} - ${h.t}`);
+    aoMudar(h.n ? `${h.n} - ${h.t}` : h.t);
     setSug([]);
   };
   return (
@@ -28,6 +28,7 @@ export default function HinoInput({ id, valor, aoMudar }: Props) {
         placeholder="Número ou nome do hino"
         autoComplete="off"
         onChange={(e) => { aoMudar(e.target.value); buscar(e.target.value); }}
+        onFocus={() => { if (!valor.trim()) setSug(HINOS.filter((h) => !h.n)); }}
         onBlur={() => setTimeout(() => setSug([]), 150)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') setSug([]);
@@ -37,7 +38,7 @@ export default function HinoInput({ id, valor, aoMudar }: Props) {
       {sug.length > 0 && (
         <ul className="sug">
           {sug.map((h) => (
-            <li key={h.n} onPointerDown={(e) => { e.preventDefault(); escolher(h); }}><b>{h.n}</b>{h.t}</li>
+            <li key={h.n || h.t} onPointerDown={(e) => { e.preventDefault(); escolher(h); }}>{h.n && <b>{h.n}</b>}{h.t}</li>
           ))}
         </ul>
       )}
