@@ -5,6 +5,7 @@ import Admin from './paginas/Admin';
 import Atas from './paginas/Atas';
 import Calendario from './paginas/Calendario';
 import Conta from './paginas/Conta';
+import Entrevistas from './paginas/Entrevistas';
 import Gerador from './paginas/Gerador';
 import Home from './paginas/Home';
 import Login from './paginas/Login';
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/atas" element={<Atas />} />
           <Route path="/atas/:id" element={<GeradorRota />} />
           <Route path="/calendario" element={<Calendario />} />
+          <Route path="/entrevistas" element={<Entrevistas />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/conta" element={<Conta />} />
           <Route path="/trocar-senha" element={<TrocarSenha />} />

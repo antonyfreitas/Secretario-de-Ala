@@ -14,7 +14,7 @@ export default function Conta() {
 
   const trocar = async (e: FormEvent) => {
     e.preventDefault();
-    if (nova.length < 12) return setMsg({ t: 'Use pelo menos 12 caracteres.', err: true });
+    if (nova.length < 8) return setMsg({ t: 'Use pelo menos 8 caracteres.', err: true });
     if (nova !== conf) return setMsg({ t: 'As senhas não conferem.', err: true });
     const { error } = await supabase!.rpc('trocar_minha_senha', { p_nova: nova });
     if (error) return setMsg({ t: error.message.charAt(0).toUpperCase() + error.message.slice(1) + '.', err: true });
@@ -40,7 +40,7 @@ export default function Conta() {
       <fieldset><legend>Senha</legend>
         {perfil?.role === 'admin' ? (
           <form className="col" onSubmit={trocar}>
-            <div><label htmlFor="n">Nova senha (12 caracteres ou mais)</label><input id="n" type="password" autoComplete="new-password" value={nova} onChange={(e) => setNova(e.target.value)} /></div>
+            <div><label htmlFor="n">Nova senha (8 caracteres ou mais)</label><input id="n" type="password" autoComplete="new-password" value={nova} onChange={(e) => setNova(e.target.value)} /></div>
             <div><label htmlFor="c">Repita a nova senha</label><input id="c" type="password" autoComplete="new-password" value={conf} onChange={(e) => setConf(e.target.value)} /></div>
             <button className="btn p" type="submit">Trocar senha</button>
           </form>

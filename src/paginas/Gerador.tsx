@@ -165,7 +165,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         })}
       </form>
 
-      <Enviar gerar={() => blobPdf(d)} nome={nomePdf(d)} titulo={titulo} orgId={atual?.orgId ?? (orgSel || undefined)} nuvem={nuvem} />
+      <Enviar gerar={() => blobPdf(d)} nome={nomePdf(d)} titulo={titulo} dataTxt={fd(d.data)} orgId={atual?.orgId ?? (orgSel || undefined)} nuvem={nuvem} />
 
       <div className="bar">
         <p className={'stbar' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>

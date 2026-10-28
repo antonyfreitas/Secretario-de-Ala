@@ -15,7 +15,7 @@ export default function TrocarSenha() {
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    if (nova.length < 12) return setMsg({ t: 'Use pelo menos 12 caracteres.', err: true });
+    if (nova.length < 8) return setMsg({ t: 'Use pelo menos 8 caracteres.', err: true });
     if (nova !== conf) return setMsg({ t: 'As senhas não conferem.', err: true });
     setOcupado(true);
     const { error } = await supabase!.rpc('trocar_minha_senha', { p_nova: nova });
@@ -30,7 +30,7 @@ export default function TrocarSenha() {
       <h1>Troque a sua senha</h1>
       <p className="mut">Por segurança, defina uma senha nova antes de continuar{perfil ? `, ${perfil.usuario}` : ''}. Depois disso, só o administrador da sua ala poderá redefini-la.</p>
       <form className="col" onSubmit={enviar}>
-        <div><label htmlFor="n">Nova senha (12 caracteres ou mais)</label><input id="n" type="password" autoComplete="new-password" value={nova} onChange={(e) => setNova(e.target.value)} required /></div>
+        <div><label htmlFor="n">Nova senha (8 caracteres ou mais)</label><input id="n" type="password" autoComplete="new-password" value={nova} onChange={(e) => setNova(e.target.value)} required /></div>
         <div><label htmlFor="c">Repita a nova senha</label><input id="c" type="password" autoComplete="new-password" value={conf} onChange={(e) => setConf(e.target.value)} required /></div>
         <p className={'msg' + (msg.err ? ' err' : '')} role="alert">{msg.t}</p>
         <div className="acts">

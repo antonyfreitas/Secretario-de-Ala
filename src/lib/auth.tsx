@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { supabase } from './supabase';
 
 export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'org_admin' | 'user'; ativo: boolean; org_id: string | null; trocar_senha: boolean }
-export interface OrgAtual { id: string; nome: string; nuvem: boolean }
+export interface OrgAtual { id: string; nome: string; nuvem: boolean; entrevistas: boolean }
 interface Ctx {
   carregando: boolean;
   perfil: Perfil | null;
@@ -36,8 +36,8 @@ async function buscarPerfil(): Promise<Perfil | null> {
 }
 async function buscarOrg(p: Perfil | null): Promise<OrgAtual | null> {
   if (!supabase || !p?.org_id) return null;
-  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa').eq('id', p.org_id).maybeSingle();
-  return data ? { id: data.id as string, nome: data.nome as string, nuvem: data.nuvem_ativa === true } : null;
+  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa,entrevistas_ativo').eq('id', p.org_id).maybeSingle();
+  return data ? { id: data.id as string, nome: data.nome as string, nuvem: data.nuvem_ativa === true, entrevistas: data.entrevistas_ativo === true } : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

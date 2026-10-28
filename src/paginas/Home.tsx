@@ -12,7 +12,7 @@ function Ferramenta({ to, titulo, desc, alerta }: { to: string; titulo: string; 
 }
 
 export default function Home() {
-  const { perfil } = useAuth();
+  const { perfil, org } = useAuth();
   const man = useManual(perfil?.id);
   return (
     <main>
@@ -24,6 +24,7 @@ export default function Home() {
           <>
             <Ferramenta to="/calendario" titulo="Calendário de domingos" desc="Veja quais domingos já têm ata." />
             <Ferramenta to="/atas" titulo="Atas salvas" desc="Reabra, edite, duplique e faça backup." />
+            {org?.entrevistas && <Ferramenta to="/entrevistas" titulo="Entrevistas" desc="Quem foi entrevistado, quando e por quem. Pesquise antes das reuniões." />}
             <Ferramenta to="/manual" titulo="Atualizações do Manual" desc={man.texto} alerta={man.alerta} />
             <Ferramenta to="/conta" titulo="Minha conta" desc="Trocar a senha e apagar os dados deste aparelho." />
             {perfil.role === 'admin' && <Ferramenta to="/admin" titulo="Administração" desc="Usuários, nuvem e monitor do Manual." />}

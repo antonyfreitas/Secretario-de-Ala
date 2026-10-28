@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { limpar, type Ata, type Dados } from './tipos';
 
 export type Resultado = 'ok' | 'conflito' | 'erro';
-export interface Org { id: string; nome: string; nuvem: boolean; emailAtivo: boolean }
+export interface Org { id: string; nome: string; nuvem: boolean; emailAtivo: boolean; entrevistasAtivo: boolean; emailAssunto: string | null; emailMensagem: string | null }
 export interface Destinatario { id: string; org_id: string; nome: string; papel: string; email: string | null; whatsapp: string | null }
 export interface Edicao { em: string; por: string | null; d: Dados }
 
@@ -50,8 +50,8 @@ export async function listarHistorico(id: string): Promise<Edicao[]> {
 
 export async function listarOrgs(): Promise<Org[]> {
   if (!supabase) return [];
-  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa,email_ativo').order('nome');
-  return (data ?? []).map((r) => ({ id: r.id as string, nome: r.nome as string, nuvem: r.nuvem_ativa === true, emailAtivo: r.email_ativo === true }));
+  const { data } = await supabase.from('organizacoes').select('id,nome,nuvem_ativa,email_ativo,entrevistas_ativo,email_assunto,email_mensagem').order('nome');
+  return (data ?? []).map((r) => ({ id: r.id as string, nome: r.nome as string, nuvem: r.nuvem_ativa === true, emailAtivo: r.email_ativo === true, entrevistasAtivo: r.entrevistas_ativo === true, emailAssunto: (r.email_assunto as string | null) ?? null, emailMensagem: (r.email_mensagem as string | null) ?? null }));
 }
 
 export async function listarDestinatarios(orgId: string): Promise<Destinatario[]> {

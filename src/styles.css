@@ -106,3 +106,9 @@ fieldset:disabled{opacity:.75}
 .dia{font-size:.85rem}
 .leg{font-size:.8rem;gap:12px}
 summary{cursor:pointer;min-height:32px}
+.pess{border-top:1px solid var(--line)}
+.open2{display:block;width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:12px 0;min-height:44px;cursor:pointer}
+.open2 b{display:block;font-size:1.1rem}
+.open2 span{color:var(--mut);font-size:.9rem}
+.dia.sel{box-shadow:0 0 0 3px var(--ink)}
+.btn.on2{background:var(--line)}

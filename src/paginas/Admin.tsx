@@ -22,6 +22,7 @@ export default function Admin() {
   const [novo, setNovo] = useState({ usuario: '', nome: '', role: 'user', org: perfil?.org_id ?? '', senha: gerarSenha() });
   const [novoDest, setNovoDest] = useState({ nome: '', papel: 'bispo', email: '', whatsapp: '' });
   const [mostrada, setMostrada] = useState('');
+  const [modelo, setModelo] = useState({ assunto: '', mensagem: '' });
   const [ed, setEd] = useState<Edicao | null>(null);
   const [armado, setArmado] = useState<string | null>(null);
   const aviso = (t: string, err = false) => setMsg({ t, err });
@@ -38,6 +39,10 @@ export default function Admin() {
   const carregarDest = async (o: string) => setDest(await listarDestinatarios(o));
   useEffect(() => { void carregarOrgs(); void carregarUsuarios(); }, []);
   useEffect(() => { if (orgSel) void carregarDest(orgSel); }, [orgSel]);
+  useEffect(() => {
+    const o = orgs.find((x) => x.id === orgSel);
+    if (o) setModelo({ assunto: o.emailAssunto ?? '', mensagem: o.emailMensagem ?? '' });
+  }, [orgs, orgSel]);
 
   const alternarNuvem = async (o: Org) => {
     if (!supabase) return;
@@ -54,6 +59,23 @@ export default function Admin() {
     await carregarOrgs();
     aviso(`${o.nome}: envio da ata por e-mail ${!o.emailAtivo ? 'ligado' : 'desligado'}.`);
   };
+  const alternarEntrevistas = async (o: Org) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('organizacoes').update({ entrevistas_ativo: !o.entrevistasAtivo }).eq('id', o.id);
+    if (error) return aviso('Não foi possível alterar as entrevistas.', true);
+    await carregarOrgs();
+    if (o.id === perfil?.org_id) await recarregarNuvem();
+    aviso(`${o.nome}: entrevistas ${!o.entrevistasAtivo ? 'ligadas' : 'desligadas'}.`);
+  };
+  const salvarModelo = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !orgSel) return;
+    const { error } = await supabase.from('organizacoes').update({ email_assunto: modelo.assunto.trim() || null, email_mensagem: modelo.mensagem.trim() || null }).eq('id', orgSel);
+    if (error) return aviso('Não foi possível salvar o modelo.', true);
+    await carregarOrgs();
+    aviso('Modelo do e-mail salvo.');
+  };
+  const previa = (t: string) => t.split('{ala}').join(nomeOrg(orgSel)).split('{data}').join('25/10/2026').split('{usuario}').join(perfil?.usuario ?? '');
   const criarOrg = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
@@ -150,10 +172,11 @@ export default function Admin() {
       <fieldset><legend>{global ? 'Alas' : 'Minha ala'}</legend>
         {orgs.map((o) => (
           <div className="ln" key={o.id}>
-            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'} · e-mail: {o.emailAtivo ? 'ligado' : 'desligado'}</span></div>
+            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'} · e-mail: {o.emailAtivo ? 'ligado' : 'desligado'} · entrevistas: {o.entrevistasAtivo ? 'ligadas' : 'desligadas'}</span></div>
             <div className="acts">
               <button className="btn sw" type="button" onClick={() => void alternarNuvem(o)}>{o.nuvem ? 'Desligar nuvem' : 'Ligar nuvem'}</button>
               <button className="btn sw" type="button" onClick={() => void alternarEmail(o)}>{o.emailAtivo ? 'Desligar e-mail' : 'Ligar e-mail'}</button>
+              <button className="btn sw" type="button" onClick={() => void alternarEntrevistas(o)}>{o.entrevistasAtivo ? 'Desligar entrevistas' : 'Ligar entrevistas'}</button>
               {global && <button className="btn sw" type="button" onClick={() => void excluirOrg(o)}>{armado === o.id ? 'Confirmar: excluir' : 'Excluir'}</button>}
             </div>
           </div>
@@ -196,7 +219,7 @@ export default function Admin() {
           <div><label htmlFor="nn">Nome (opcional)</label><input id="nn" type="text" autoComplete="off" value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} /></div>
           {campoPapel(novo.role, (v) => setNovo({ ...novo, role: v }), 'nr')}
           {global && campoOrg(novo.org, (v) => setNovo({ ...novo, org: v }), 'no2')}
-          <div><label htmlFor="ns">Senha inicial</label><input id="ns" type="text" autoComplete="off" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} required minLength={12} /></div>
+          <div><label htmlFor="ns">Senha inicial</label><input id="ns" type="text" autoComplete="off" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} required minLength={8} /></div>
           <div className="acts"><button className="btn" type="button" onClick={() => setNovo({ ...novo, senha: gerarSenha() })}>Gerar outra senha</button><button className="btn p" type="submit">Criar usuário</button></div>
         </form>
       </fieldset>
@@ -218,6 +241,16 @@ export default function Admin() {
           <button className="btn" type="submit">Adicionar destinatário</button>
         </form>
         <p className="sub">E-mails e telefones ficam no servidor, visíveis só para os usuários da ala. Cadastre só quem precisa receber a cópia.</p>
+      </fieldset>
+
+      <fieldset><legend>Modelo do e-mail da ata</legend>
+        {global && orgs.length > 1 && <div className="g"><div className="wide">{campoOrg(orgSel, setOrgSel, 'om')}</div></div>}
+        <form className="col" onSubmit={salvarModelo}>
+          <div><label htmlFor="ma">Assunto</label><input id="ma" type="text" autoComplete="off" maxLength={150} placeholder="Ata da reunião sacramental de {data} - {ala}" value={modelo.assunto} onChange={(e) => setModelo({ ...modelo, assunto: e.target.value })} /></div>
+          <div><label htmlFor="mm">Mensagem</label><textarea id="mm" maxLength={2000} placeholder="Segue em anexo a ata da reunião sacramental de {data} da {ala}.&#10;&#10;Enviada por {usuario}." value={modelo.mensagem} onChange={(e) => setModelo({ ...modelo, mensagem: e.target.value })} /></div>
+          <p className="sub">Use {'{ala}'}, {'{data}'} e {'{usuario}'}. Em branco, vale o modelo padrão. Prévia do assunto: {previa(modelo.assunto || 'Ata da reunião sacramental de {data} - {ala}')}</p>
+          <button className="btn" type="submit">Salvar modelo</button>
+        </form>
       </fieldset>
 
       <fieldset><legend>Monitor do Manual</legend>

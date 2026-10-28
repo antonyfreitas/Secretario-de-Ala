@@ -3,7 +3,7 @@ import { baixar } from '../lib/arquivo';
 import { listarDestinatarios, listarOrgs, type Destinatario } from '../lib/nuvem';
 import { supabase } from '../lib/supabase';
 
-interface Props { gerar: () => Blob | null; nome: string; titulo: string; orgId?: string; nuvem: boolean }
+interface Props { gerar: () => Blob | null; nome: string; titulo: string; dataTxt: string; orgId?: string; nuvem: boolean }
 
 async function paraBase64(b: Blob): Promise<string> {
   const bytes = new Uint8Array(await b.arrayBuffer());
@@ -13,7 +13,7 @@ async function paraBase64(b: Blob): Promise<string> {
 }
 
 /** Enviar a cópia: e-mail automático (se a ala ligou), compartilhamento do aparelho, e-mail aberto no app e WhatsApp. */
-export default function Enviar({ gerar, nome, titulo, orgId, nuvem }: Props) {
+export default function Enviar({ gerar, nome, titulo, dataTxt, orgId, nuvem }: Props) {
   const [dest, setDest] = useState<Destinatario[]>([]);
   const [emailAtivo, setEmailAtivo] = useState(false);
   const [msg, setMsg] = useState('');
@@ -42,7 +42,7 @@ export default function Enviar({ gerar, nome, titulo, orgId, nuvem }: Props) {
     if (!b || !supabase) return setMsg('Não foi possível gerar o PDF.');
     setEnviando(true);
     setMsg('Enviando…');
-    const { data, error } = await supabase.functions.invoke('enviar-ata', { body: { org_id: orgId, titulo, nome, pdf: await paraBase64(b) } });
+    const { data, error } = await supabase.functions.invoke('enviar-ata', { body: { org_id: orgId, data: dataTxt, nome, pdf: await paraBase64(b) } });
     setEnviando(false);
     if (error || !data?.ok) {
       let texto = 'Não foi possível enviar.';
