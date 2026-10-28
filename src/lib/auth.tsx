@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
 
-export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'org_admin' | 'user'; ativo: boolean; org_id: string | null }
+export interface Perfil { id: string; usuario: string; nome: string; role: 'admin' | 'org_admin' | 'user'; ativo: boolean; org_id: string | null; trocar_senha: boolean }
 export interface OrgAtual { id: string; nome: string; nuvem: boolean }
 interface Ctx {
   carregando: boolean;
@@ -11,6 +11,7 @@ interface Ctx {
   entrar: (usuario: string, senha: string) => Promise<string | null>;
   sair: () => Promise<void>;
   recarregarNuvem: () => Promise<void>;
+  recarregarPerfil: () => Promise<void>;
 }
 
 export const ROTULO_PAPEL: Record<string, string> = { admin: 'administrador geral', org_admin: 'administrador da ala', user: 'usuário' };
@@ -30,7 +31,7 @@ async function buscarPerfil(): Promise<Perfil | null> {
   if (!supabase) return null;
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return null;
-  const { data } = await supabase.from('profiles').select('id,usuario,nome,role,ativo,org_id').eq('id', u.user.id).maybeSingle();
+  const { data } = await supabase.from('profiles').select('id,usuario,nome,role,ativo,org_id,trocar_senha').eq('id', u.user.id).maybeSingle();
   return data && data.ativo ? (data as Perfil) : null;
 }
 async function buscarOrg(p: Perfil | null): Promise<OrgAtual | null> {
@@ -104,6 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const recarregarNuvem = useCallback(async () => setOrg(await buscarOrg(perfil)), [perfil]);
+  const recarregarPerfil = useCallback(async () => {
+    const p = await buscarPerfil();
+    if (p) setPerfil(p);
+  }, []);
 
-  return <AuthCtx.Provider value={{ carregando, perfil, org, nuvem: org?.nuvem ?? false, entrar, sair, recarregarNuvem }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ carregando, perfil, org, nuvem: org?.nuvem ?? false, entrar, sair, recarregarNuvem, recarregarPerfil }}>{children}</AuthCtx.Provider>;
 }

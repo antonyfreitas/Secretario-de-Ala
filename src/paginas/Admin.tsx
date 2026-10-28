@@ -47,6 +47,13 @@ export default function Admin() {
     if (o.id === perfil?.org_id) await recarregarNuvem();
     aviso(`${o.nome}: atas na nuvem ${!o.nuvem ? 'ligadas' : 'desligadas'}.`);
   };
+  const alternarEmail = async (o: Org) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('organizacoes').update({ email_ativo: !o.emailAtivo }).eq('id', o.id);
+    if (error) return aviso('Não foi possível alterar o envio por e-mail.', true);
+    await carregarOrgs();
+    aviso(`${o.nome}: envio da ata por e-mail ${!o.emailAtivo ? 'ligado' : 'desligado'}.`);
+  };
   const criarOrg = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
@@ -98,7 +105,7 @@ export default function Admin() {
     const { error } = await supabase.rpc('redefinir_senha', { p_usuario: p.usuario, p_senha: senha });
     if (error) return aviso(`Não foi possível redefinir: ${error.message}.`, true);
     setMostrada(`Nova senha de ${p.usuario} (aparece só agora): ${senha}`);
-    aviso('Senha redefinida. As sessões abertas desse usuário foram encerradas.');
+    aviso('Senha redefinida. Ele terá de trocá-la no próximo acesso, e as sessões abertas dele foram encerradas.');
   };
   const excluir = async (p: Perfil) => {
     if (!supabase) return;
@@ -143,14 +150,15 @@ export default function Admin() {
       <fieldset><legend>{global ? 'Alas' : 'Minha ala'}</legend>
         {orgs.map((o) => (
           <div className="ln" key={o.id}>
-            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'}</span></div>
+            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'} · e-mail: {o.emailAtivo ? 'ligado' : 'desligado'}</span></div>
             <div className="acts">
               <button className="btn sw" type="button" onClick={() => void alternarNuvem(o)}>{o.nuvem ? 'Desligar nuvem' : 'Ligar nuvem'}</button>
+              <button className="btn sw" type="button" onClick={() => void alternarEmail(o)}>{o.emailAtivo ? 'Desligar e-mail' : 'Ligar e-mail'}</button>
               {global && <button className="btn sw" type="button" onClick={() => void excluirOrg(o)}>{armado === o.id ? 'Confirmar: excluir' : 'Excluir'}</button>}
             </div>
           </div>
         ))}
-        <p className="sub">Ligar a nuvem guarda nomes de membros no servidor e todos os usuários da ala veem as mesmas atas. Ligue só com a autorização do bispo e conforme as regras da Igreja. Desligar não apaga o que já foi enviado.</p>
+        <p className="sub">Ligar a nuvem guarda nomes de membros no servidor e todos os usuários da ala veem as mesmas atas. Ligar o e-mail permite enviar o PDF da ata aos destinatários cadastrados, por um serviço de e-mail externo. Ligue só com a autorização do bispo e conforme as regras da Igreja. Desligar a nuvem não apaga o que já foi enviado.</p>
         {global && (
           <form className="col" onSubmit={criarOrg}>
             <div><label htmlFor="no">Nova ala</label><input id="no" type="text" autoComplete="off" value={novaOrg} onChange={(e) => setNovaOrg(e.target.value)} required minLength={2} /></div>

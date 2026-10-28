@@ -28,3 +28,12 @@ npm install
 npm run dev     # desenvolvimento
 npm run build   # verifica tipos e gera dist/
 ```
+
+## Envio da ata por e-mail
+
+A função `supabase/functions/enviar-ata` envia o PDF aos destinatários da ala pelo Resend. Segredos (Supabase → Edge Functions → Secrets), nunca no repositório:
+
+- `RESEND_API_KEY` — chave da API do Resend (só envia e-mails).
+- `EMAIL_FROM` (opcional) — por exemplo `Atas Ala <atas-ala@seudominio.com.br>`, de um domínio verificado no Resend.
+
+O envio só funciona se o administrador ligar "e-mail" na ala (Administração).

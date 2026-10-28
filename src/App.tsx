@@ -9,12 +9,14 @@ import Gerador from './paginas/Gerador';
 import Home from './paginas/Home';
 import Login from './paginas/Login';
 import ManualPage from './paginas/ManualPage';
+import TrocarSenha from './paginas/TrocarSenha';
 
 function Protegida({ admin }: { admin?: boolean }) {
   const { carregando, perfil } = useAuth();
   const loc = useLocation();
   if (carregando) return <main><p className="mut">Carregando…</p></main>;
   if (!perfil) return <Navigate to="/entrar" replace state={{ de: loc.pathname + loc.search }} />;
+  if (perfil.trocar_senha && loc.pathname !== '/trocar-senha') return <Navigate to="/trocar-senha" replace />;
   if (admin && perfil.role !== 'admin') return <Navigate to="/" replace />;
   return <Outlet />;
 }
@@ -37,6 +39,7 @@ export default function App() {
           <Route path="/calendario" element={<Calendario />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/conta" element={<Conta />} />
+          <Route path="/trocar-senha" element={<TrocarSenha />} />
         </Route>
         <Route element={<Protegida admin />}>
           <Route path="/admin" element={<Admin />} />
