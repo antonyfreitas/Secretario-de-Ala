@@ -24,6 +24,7 @@ export default function Home() {
           <>
             <Ferramenta to="/calendario" titulo="Calendário de domingos" desc="Veja quais domingos já têm ata." />
             <Ferramenta to="/atas" titulo="Atas salvas" desc="Reabra, edite, duplique e faça backup." />
+            <Ferramenta to="/oradores" titulo="Oradores" desc="Quando cada pessoa discursou pela última vez, pelas atas salvas." />
             {org?.entrevistas && <Ferramenta to="/entrevistas" titulo="Entrevistas" desc="Quem foi entrevistado, quando e por quem. Pesquise antes das reuniões." />}
             <Ferramenta to="/manual" titulo="Atualizações do Manual" desc={man.texto} alerta={man.alerta} />
             <Ferramenta to="/conta" titulo="Minha conta" desc="Trocar a senha e apagar os dados deste aparelho." />

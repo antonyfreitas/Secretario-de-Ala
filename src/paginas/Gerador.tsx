@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import Enviar from '../componentes/Enviar';
 import HinoInput from '../componentes/HinoInput';
+import OradorInput from '../componentes/OradorInput';
 import { baixar, slug } from '../lib/arquivo';
 import { novoId, useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
 import { fd, proxDomingo, quando } from '../lib/datas';
 import { SECOES } from '../lib/formulario';
 import { listarHistorico, listarOrgs, type Edicao, type Org } from '../lib/nuvem';
+import { indexarOradores } from '../lib/oradores';
 import { fit } from '../lib/pdf';
 import { CHAVES, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
 
@@ -38,6 +40,8 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const atual = curId ? atas.find((a) => a.id === curId) : undefined;
   const global = perfil?.role === 'admin';
   const set = (k: keyof Dados, v: string | boolean) => setD((x) => ({ ...x, [k]: v }));
+  const orgAtual = atual?.orgId ?? (orgSel || perfil?.org_id || undefined);
+  const indice = useMemo(() => indexarOradores(atas, global ? orgAtual : undefined), [atas, global, orgAtual]);
 
   useEffect(() => {
     if (!nuvem || !global) return;
@@ -153,6 +157,8 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
                         <textarea id={c.id} className={cls} value={v} placeholder={c.dica} onChange={(e) => set(c.id, e.target.value)} />
                       ) : c.tipo === 'hino' ? (
                         <HinoInput id={c.id} valor={v} aoMudar={(x) => set(c.id, x)} />
+                      ) : c.tipo === 'orador' ? (
+                        <OradorInput id={c.id} valor={v} aoMudar={(x) => set(c.id, x)} indice={indice} dataAta={d.data} ataId={curId} outros={(['orador1', 'orador2', 'orador3'] as const).filter((k) => k !== c.id).map((k) => d[k])} />
                       ) : (
                         <input id={c.id} className={cls} type={c.tipo ?? 'text'} inputMode={c.tipo === 'number' ? 'numeric' : undefined} value={v} autoComplete="off" onChange={(e) => set(c.id, e.target.value)} />
                       )}

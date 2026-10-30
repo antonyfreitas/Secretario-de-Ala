@@ -1,6 +1,6 @@
 import type { Dados } from './tipos';
 
-export type Tipo = 'text' | 'time' | 'date' | 'number' | 'area' | 'hino' | 'check';
+export type Tipo = 'text' | 'time' | 'date' | 'number' | 'area' | 'hino' | 'orador' | 'check';
 export interface Campo { id: keyof Dados; rotulo: string; tipo?: Tipo; dica?: string; larga?: boolean; soLogado?: boolean }
 
 export const SECOES: [string, Campo[]][] = [
@@ -22,8 +22,8 @@ export const SECOES: [string, Campo[]][] = [
     { id: 'incluirOr', rotulo: 'Incluir no PDF as orações do pão e da água', tipo: 'check' },
   ]],
   ['Mensagens do evangelho', [
-    { id: 'orador1', rotulo: 'Primeiro orador' }, { id: 'orador2', rotulo: 'Segundo orador' },
-    { id: 'hinoInter', rotulo: 'Hino intermediário', tipo: 'hino' }, { id: 'orador3', rotulo: 'Último orador' },
+    { id: 'orador1', rotulo: 'Primeiro orador', tipo: 'orador' }, { id: 'orador2', rotulo: 'Segundo orador', tipo: 'orador' },
+    { id: 'hinoInter', rotulo: 'Hino intermediário', tipo: 'hino' }, { id: 'orador3', rotulo: 'Último orador', tipo: 'orador' },
   ]],
   ['Encerramento', [{ id: 'ultimoHino', rotulo: 'Último hino', tipo: 'hino' }, { id: 'ultimaOracao', rotulo: 'Última oração' }]],
   ['Situação', [{ id: 'pronta', rotulo: 'Marcar esta ata como pronta (aparece como “Pronta” no calendário)', tipo: 'check', soLogado: true }]],

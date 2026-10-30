@@ -9,6 +9,7 @@ import Entrevistas from './paginas/Entrevistas';
 import Gerador from './paginas/Gerador';
 import Home from './paginas/Home';
 import Login from './paginas/Login';
+import Oradores from './paginas/Oradores';
 import ManualPage from './paginas/ManualPage';
 import TrocarSenha from './paginas/TrocarSenha';
 
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/atas/:id" element={<GeradorRota />} />
           <Route path="/calendario" element={<Calendario />} />
           <Route path="/entrevistas" element={<Entrevistas />} />
+          <Route path="/oradores" element={<Oradores />} />
           <Route path="/manual" element={<ManualPage />} />
           <Route path="/conta" element={<Conta />} />
           <Route path="/trocar-senha" element={<TrocarSenha />} />

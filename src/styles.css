@@ -112,3 +112,13 @@ summary{cursor:pointer;min-height:32px}
 .open2 span{color:var(--mut);font-size:.9rem}
 .dia.sel{box-shadow:0 0 0 3px var(--ink)}
 .btn.on2{background:var(--line)}
+.dica{margin:6px 0 0;padding:6px 10px;border-left:4px solid var(--line);font-size:.88rem;color:var(--mut);line-height:1.35}
+.dica-recente{border-left-color:#B8892F;color:var(--ink)}
+.dica-longo{border-left-color:var(--acc);color:var(--ink)}
+.dica-novo{border-left-style:dashed}
+.sug li span{display:block}
+.sug li small{display:block;color:var(--mut);font-size:.8rem}
+.dot.longo{background:var(--acc)}
+.dot.recente{background:#B8892F}
+.dot.normal{background:var(--line)}
+.open2 b .dot{margin-right:8px}
