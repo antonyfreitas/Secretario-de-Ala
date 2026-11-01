@@ -104,6 +104,11 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   };
 
   const titulo = `Ata da reunião sacramental de ${fd(d.data) || 'data a definir'} - Ala ${d.ala}`;
+  const primeiroDomingo = (() => {
+    if (!d.data) return false;
+    const t = new Date(d.data + 'T12:00:00');
+    return t.getDay() === 0 && t.getDate() <= 7;
+  })();
 
   return (
     <main>
@@ -132,8 +137,24 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         </details>
       )}
 
+      <div className="seg" role="group" aria-label="Tipo de reunião">
+        <button type="button" className={d.testemunhos ? '' : 'on3'} onClick={() => set('testemunhos', false)}>Reunião sacramental</button>
+        <button type="button" className={d.testemunhos ? 'on3' : ''} onClick={() => set('testemunhos', true)}>Jejum e testemunhos</button>
+      </div>
+      {primeiroDomingo && !d.testemunhos && (
+        <p className="sub">Este é o primeiro domingo do mês. <button className="lnk2" type="button" onClick={() => set('testemunhos', true)}>Mudar para jejum e testemunhos</button></p>
+      )}
+
       <form onSubmit={(e) => e.preventDefault()}>
         {SECOES.map(([secao, campos]) => {
+          if (d.testemunhos && secao === 'Mensagens do evangelho') {
+            return (
+              <fieldset key={secao}>
+                <legend>Jejum e testemunhos</legend>
+                <p className="mut">Reunião de jejum e testemunhos: não há oradores nem hino intermediário. O PDF traz um espaço para anotações.</p>
+              </fieldset>
+            );
+          }
           const vis = campos.filter((c) => !c.soLogado || perfil);
           if (!vis.length) return null;
           return (

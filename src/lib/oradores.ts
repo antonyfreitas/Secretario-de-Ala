@@ -15,7 +15,7 @@ export function indexarOradores(atas: Ata[], orgId?: string): Indice {
   const m: Indice = new Map();
   const ordenadas = [...atas].sort((a, b) => b.d.data.localeCompare(a.d.data));
   for (const a of ordenadas) {
-    if (!a.d.data || (orgId && a.orgId && a.orgId !== orgId)) continue;
+    if (!a.d.data || a.d.testemunhos || (orgId && a.orgId && a.orgId !== orgId)) continue;
     [a.d.orador1, a.d.orador2, a.d.orador3].forEach((nome, i) => {
       const n = nome.trim();
       if (n.length < 2) return;

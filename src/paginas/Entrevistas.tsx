@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { baixar } from '../lib/arquivo';
 import { useAuth } from '../lib/auth';
 import { fd, MESES, ymd } from '../lib/datas';
+import { pdfLista, pdfResumo } from '../lib/pdfEntrevistas';
 import { excluirEntrevista, gravarEntrevista, haTempo, listarEntrevistas, norm, TIPOS, type Entrevista } from '../lib/entrevistas';
 
 type Form = { id?: string; data: string; pessoa: string; entrevistador: string; tipo: string; assunto: string };
@@ -68,6 +70,14 @@ export default function Entrevistas() {
     await carregar();
   };
 
+  const exportar = (tipo: 'resumo' | 'lista') => {
+    if (!visiveis.length) return aviso('Não há entrevistas para exportar.', true);
+    const ala = org?.nome ?? 'Ala';
+    const blob = tipo === 'resumo' ? pdfResumo(grupos.map((g) => ({ nome: g.itens[0].pessoa, itens: g.itens })), ala, busca) : pdfLista(visiveis, ala, busca);
+    baixar(blob, `entrevistas-${tipo}-${hojeStr()}.pdf`);
+    aviso('PDF pronto. Ele respeita a pesquisa que estiver ativa.');
+  };
+
   const linha = (e: Entrevista) => (
     <div className="ln" key={e.id}>
       <div><b>{fd(e.data)}</b> <span>por {e.entrevistador} · {TIPOS[e.tipo]}{e.assunto ? ` · ${e.assunto}` : ''}{aba === 'calendario' ? ` · ${e.pessoa}` : ''}</span></div>
@@ -101,6 +111,8 @@ export default function Entrevistas() {
         <button className="btn p" type="button" onClick={novo}>Registrar entrevista</button>
         <button className={'btn' + (aba === 'pessoas' ? ' on2' : '')} type="button" onClick={() => setAba('pessoas')}>Por pessoa</button>
         <button className={'btn' + (aba === 'calendario' ? ' on2' : '')} type="button" onClick={() => setAba('calendario')}>Calendário</button>
+        <button className="btn" type="button" onClick={() => exportar('resumo')}>PDF: resumo por pessoa</button>
+        <button className="btn" type="button" onClick={() => exportar('lista')}>PDF: todas as entrevistas</button>
       </div>
       <p className={'msg' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>
 

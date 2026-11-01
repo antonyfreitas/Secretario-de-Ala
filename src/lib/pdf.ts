@@ -76,11 +76,17 @@ export function buildPdf(d,s){
   y+=GAP;bar('Sacramento');
   cells([['Hino sacramental',d.hinoSacramental,CW]]);
   if(d.incluirOr){prayer('Benção do Pão',PAO);prayer('Benção da Água',AGUA)}
-  y+=GAP;bar('Mensagens do evangelho');
-  cells([['Primeiro orador',d.orador1,CW]]);
-  cells([['Segundo orador',d.orador2,CW]]);
-  cells([['Hino intermediário',d.hinoInter,CW]]);
-  cells([['Último orador',d.orador3,CW]]);
+  y+=GAP;
+  if(d.testemunhos){
+    bar('Jejum e testemunhos');
+    list('','Reunião de jejum e testemunhos: os membros prestam seu testemunho.',[]);
+  }else{
+    bar('Mensagens do evangelho');
+    cells([['Primeiro orador',d.orador1,CW]]);
+    cells([['Segundo orador',d.orador2,CW]]);
+    cells([['Hino intermediário',d.hinoInter,CW]]);
+    cells([['Último orador',d.orador3,CW]]);
+  }
   y+=GAP;bar('Encerramento');
   cells([['Último hino',d.ultimoHino,CW/2],['Última oração',d.ultimaOracao,CW/2]]);
   return{doc,over,s};

@@ -5,6 +5,8 @@ import { useAuth } from '../lib/auth';
 import { fd, MESES, ymd } from '../lib/datas';
 import { CAMPOS_PROGRESSO, estadoAta, type Ata } from '../lib/tipos';
 
+const SEM_TESTEMUNHO: string[] = ['orador1', 'orador2', 'orador3', 'hinoInter'];
+
 export default function Calendario() {
   const { perfil, nuvem } = useAuth();
   const { atas, carregando } = useAtas(perfil?.id, nuvem);
@@ -61,8 +63,9 @@ export default function Calendario() {
         {domingos.map((k) => {
           const r = doDia(k);
           const passado = k < hj;
-          const n = r ? CAMPOS_PROGRESSO.filter((c) => r.d[c]).length : 0;
-          const st = !r ? (passado ? 'Sem ata' : 'Vazio') : estadoAta(r) === 'pronta' ? 'Pronta' : `Rascunho · ${n}/${CAMPOS_PROGRESSO.length} campos`;
+          const campos = r?.d.testemunhos ? CAMPOS_PROGRESSO.filter((c) => !SEM_TESTEMUNHO.includes(c)) : CAMPOS_PROGRESSO;
+          const n = r ? campos.filter((c) => r.d[c]).length : 0;
+          const st = !r ? (passado ? 'Sem ata' : 'Vazio') : estadoAta(r) === 'pronta' ? 'Pronta' : `Rascunho · ${n}/${campos.length} campos`;
           const cls = 'row' + (r ? (estadoAta(r) === 'pronta' ? ' ok' : ' draft') : '') + (passado && k !== hj ? ' past' : '');
           return (
             <div key={k} className={cls}>

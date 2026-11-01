@@ -3,9 +3,9 @@ export interface Dados {
   boasvindas: string; anuncios: string; hinoAbertura: string; oracaoAbertura: string; assuntos: string;
   hinoSacramental: string; orador1: string; orador2: string; hinoInter: string; orador3: string;
   ultimoHino: string; ultimaOracao: string;
-  incluirOr: boolean; semAssuntos: boolean; pronta: boolean;
+  incluirOr: boolean; semAssuntos: boolean; pronta: boolean; testemunhos: boolean;
 }
-export type ChaveTexto = Exclude<keyof Dados, 'incluirOr' | 'semAssuntos' | 'pronta'>;
+export type ChaveTexto = Exclude<keyof Dados, 'incluirOr' | 'semAssuntos' | 'pronta' | 'testemunhos'>;
 export interface Ata {
   v: 1; id: string; criado: string; atualizado: string; d: Dados;
   orgId?: string; atualizadoPorNome?: string | null;
@@ -24,7 +24,7 @@ export const CAMPOS_PROGRESSO: ChaveTexto[] = [
 ];
 
 export function vazio(data = ''): Dados {
-  const d = { incluirOr: true, semAssuntos: false, pronta: false } as Dados;
+  const d = { incluirOr: true, semAssuntos: false, pronta: false, testemunhos: false } as Dados;
   for (const k of CHAVES) d[k] = '';
   d.ala = 'Ipanema';
   d.data = data;
@@ -39,5 +39,6 @@ export function limpar(x: unknown): Dados {
   d.incluirOr = o.incluirOr !== false;
   d.semAssuntos = !!o.semAssuntos;
   d.pronta = !!o.pronta;
+  d.testemunhos = !!o.testemunhos;
   return d;
 }

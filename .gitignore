@@ -5,5 +5,3 @@ dist
 !.env.example
 .vercel
 .teste
-__pycache__/
-*.pyc
