@@ -27,11 +27,16 @@ export default function Gerador() {
 }
 
 function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promise<boolean> }) {
-  const { perfil, nuvem } = useAuth();
+  const { perfil, nuvem, org } = useAuth();
   const { id } = useParams();
   const [sp] = useSearchParams();
   const inicial = id ? atas.find((a) => a.id === id) : undefined;
-  const [d, setD] = useState<Dados>(() => (inicial ? limpar(inicial.d) : vazio(sp.get('data') || proxDomingo())));
+  const [d, setD] = useState<Dados>(() => {
+    if (inicial) return limpar(inicial.d);
+    const v = vazio(sp.get('data') || proxDomingo());
+    if (org) v.ala = org.nome.replace(/^ala\s+/i, '');
+    return v;
+  });
   const [curId, setCurId] = useState<string | null>(inicial ? inicial.id : null);
   const [msg, setMsg] = useState({ t: '', err: false });
   const [historico, setHistorico] = useState<Edicao[]>([]);
@@ -197,7 +202,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
       <div className="bar">
         <p className={'stbar' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>
         <div className="barbtn">
-          <button className="btn" type="button" onClick={() => { setD(vazio(proxDomingo())); setCurId(null); setMsg({ t: 'Formulário limpo.', err: false }); }}>Limpar</button>
+          <button className="btn" type="button" onClick={() => { setD({ ...vazio(proxDomingo()), ala: d.ala }); setCurId(null); setMsg({ t: 'Formulário limpo.', err: false }); }}>Limpar</button>
           {perfil && <button className="btn" type="button" onClick={() => void guardar()}>Salvar</button>}
           <button className="btn p" type="button" onClick={() => baixarPdf(d)}>Gerar PDF</button>
         </div>

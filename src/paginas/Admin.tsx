@@ -25,7 +25,10 @@ export default function Admin() {
   const [modelo, setModelo] = useState({ assunto: '', mensagem: '' });
   const [ed, setEd] = useState<Edicao | null>(null);
   const [armado, setArmado] = useState<string | null>(null);
-  const aviso = (t: string, err = false) => setMsg({ t, err });
+  const aviso = (t: string, err = false) => {
+    setMsg({ t, err });
+    window.setTimeout(() => setMsg((m) => (m.t === t ? { t: '', err: false } : m)), 8000);
+  };
   const nomeOrg = (id: string | null) => orgs.find((o) => o.id === id)?.nome ?? '';
   const papeis = global ? ['user', 'org_admin', 'admin'] : ['user', 'org_admin'];
 
@@ -87,10 +90,12 @@ export default function Admin() {
   };
   const excluirOrg = async (o: Org) => {
     if (!supabase) return;
+    const n = lista.filter((p) => p.org_id === o.id).length;
+    if (n > 0) return aviso(`Não dá para excluir ${o.nome}: ainda há ${n} ${n === 1 ? 'usuário vinculado' : 'usuários vinculados'}. Mude-os de ala (Editar) ou exclua-os antes.`, true);
     if (armado !== o.id) { setArmado(o.id); setTimeout(() => setArmado((a) => (a === o.id ? null : a)), 5000); return; }
     setArmado(null);
     const { error } = await supabase.from('organizacoes').delete().eq('id', o.id);
-    if (error) return aviso('Só dá para excluir uma ala sem usuários e sem atas.', true);
+    if (error) return aviso(`Não foi possível excluir ${o.nome}: ela ainda tem atas ou outros dados vinculados.`, true);
     aviso(`${o.nome} excluída.`);
     await carregarOrgs();
   };
@@ -172,7 +177,7 @@ export default function Admin() {
       <fieldset><legend>{global ? 'Alas' : 'Minha ala'}</legend>
         {orgs.map((o) => (
           <div className="ln" key={o.id}>
-            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'} · e-mail: {o.emailAtivo ? 'ligado' : 'desligado'} · entrevistas: {o.entrevistasAtivo ? 'ligadas' : 'desligadas'}</span></div>
+            <div><b>{o.nome}</b> <span>atas na nuvem: {o.nuvem ? 'ligadas' : 'desligadas'} · e-mail: {o.emailAtivo ? 'ligado' : 'desligado'} · entrevistas: {o.entrevistasAtivo ? 'ligadas' : 'desligadas'} · {lista.filter((p) => p.org_id === o.id).length} usuário(s)</span></div>
             <div className="acts">
               <button className="btn sw" type="button" onClick={() => void alternarNuvem(o)}>{o.nuvem ? 'Desligar nuvem' : 'Ligar nuvem'}</button>
               <button className="btn sw" type="button" onClick={() => void alternarEmail(o)}>{o.emailAtivo ? 'Desligar e-mail' : 'Ligar e-mail'}</button>
@@ -258,7 +263,7 @@ export default function Admin() {
           ? <p>Última verificação: {fd(auto.verificado)}. Atualização mais recente: {mesTxt(auto.ultimoMes)}.</p>
           : <p className="mut">Sem dados do monitor ainda.</p>}
       </fieldset>
-      <p className={'msg' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>
+      {msg.t && <div className={'toast' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</div>}
     </main>
   );
 }
