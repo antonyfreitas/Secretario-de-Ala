@@ -11,7 +11,7 @@ export default function Home() {
   const { perfil, org } = useAuth();
   const man = useManual(perfil?.id);
   const [modo, setModo] = useState<'lista' | 'icones'>(() => {
-    try { return localStorage.getItem('menu') === 'icones' ? 'icones' : 'lista'; } catch { return 'lista'; }
+    try { return localStorage.getItem('menu') === 'lista' ? 'lista' : 'icones'; } catch { return 'icones'; }
   });
   const trocar = (m: 'lista' | 'icones') => {
     setModo(m);
