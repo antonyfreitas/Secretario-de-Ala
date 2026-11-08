@@ -10,7 +10,7 @@ import Gerador from './paginas/Gerador';
 import Home from './paginas/Home';
 import Login from './paginas/Login';
 import Oradores from './paginas/Oradores';
-import ManualPage from './paginas/ManualPage';
+import ManualEstudo from './paginas/ManualEstudo';
 import TrocarSenha from './paginas/TrocarSenha';
 
 function Protegida({ admin }: { admin?: boolean }) {
@@ -41,7 +41,7 @@ export default function App() {
           <Route path="/calendario" element={<Calendario />} />
           <Route path="/entrevistas" element={<Entrevistas />} />
           <Route path="/oradores" element={<Oradores />} />
-          <Route path="/manual" element={<ManualPage />} />
+          <Route path="/manual" element={<ManualEstudo />} />
           <Route path="/conta" element={<Conta />} />
           <Route path="/trocar-senha" element={<TrocarSenha />} />
         </Route>

@@ -159,3 +159,28 @@ dialog.modal::backdrop{background:rgba(0,0,0,.5)}
 .mhd .ib{font-size:1.4rem;line-height:1}
 .secao{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px}
 .senha{white-space:pre-line;font-weight:700;word-break:break-all;background:var(--line);border-radius:10px;padding:10px 12px}
+.num{color:var(--acc);margin-right:4px}
+.ponto{font-size:1.15rem;margin:4px 0}
+.barra{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 8px}
+.barra i{display:block;height:100%;background:var(--ok);width:0}
+.barra i.p0{width:0%}
+.barra i.p5{width:5%}
+.barra i.p10{width:10%}
+.barra i.p15{width:15%}
+.barra i.p20{width:20%}
+.barra i.p25{width:25%}
+.barra i.p30{width:30%}
+.barra i.p35{width:35%}
+.barra i.p40{width:40%}
+.barra i.p45{width:45%}
+.barra i.p50{width:50%}
+.barra i.p55{width:55%}
+.barra i.p60{width:60%}
+.barra i.p65{width:65%}
+.barra i.p70{width:70%}
+.barra i.p75{width:75%}
+.barra i.p80{width:80%}
+.barra i.p85{width:85%}
+.barra i.p90{width:90%}
+.barra i.p95{width:95%}
+.barra i.p100{width:100%}

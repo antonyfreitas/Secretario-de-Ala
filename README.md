@@ -1,22 +1,22 @@
-# Secretaria da Ala Ipanema
+# Secretário de Ala
 
-Site em React + TypeScript (Vite). Gerador de atas aberto a todos; salvar atas e os demais recursos exigem login.
+Site em React + TypeScript (Vite). O gerador de atas é aberto a todos; salvar atas e os demais recursos exigem login.
 
 ## Estrutura
 
 - `src/` — o aplicativo (rotas com histórico: o botão Voltar do navegador funciona).
-- `supabase/migrations/` — esquema do banco com RLS (políticas de acesso por usuário).
-- `public/data/manual-status.json` — gravado toda segunda pelo monitor do Manual (só mês e hash; nenhum texto).
-- `scripts/` e `.github/workflows/` — o monitor do Manual.
+- `src/dados/manual-pontos.txt` — números e títulos dos pontos do Manual Geral, usados no sorteio semanal de estudo (só a estrutura; nenhum texto do Manual).
+- `supabase/migrations/` — esquema do banco com RLS (políticas de acesso por usuário e por ala).
+- `supabase/functions/enviar-ata/` — função que envia a ata por e-mail (Resend).
 - `legacy/index.html` — versão antiga em arquivo único (só para consulta).
 
 ## Segurança
 
 - Chave pública do Supabase no navegador por desenho; os dados são protegidos pelo RLS no banco.
-- Sem cadastro aberto: usuários são criados pelo administrador. Sem perfil ativo, não há acesso a nada.
+- Sem cadastro aberto: usuários são criados por administradores. Sem perfil ativo, não há acesso a nada.
 - Cabeçalhos em `vercel.json` (CSP restrita, HSTS, sem iframe, sem referrer).
-- Sessão encerra sozinha após 30 minutos parada.
-- Backup na nuvem **desligado por padrão**; só o administrador liga (nomes de membros ficam fora do aparelho).
+- Sessão encerra sozinha após 30 minutos parada. Senha trocada no primeiro acesso; depois, só o administrador da ala redefine.
+- Recursos que guardam dados fora do aparelho (nuvem, e-mail, entrevistas) nascem desligados em cada ala.
 - Nunca suba dados de membros ao repositório. Segredos só em variáveis de ambiente.
 
 ## Configuração
@@ -31,9 +31,4 @@ npm run build   # verifica tipos e gera dist/
 
 ## Envio da ata por e-mail
 
-A função `supabase/functions/enviar-ata` envia o PDF aos destinatários da ala pelo Resend. Segredos (Supabase → Edge Functions → Secrets), nunca no repositório:
-
-- `RESEND_API_KEY` — chave da API do Resend (só envia e-mails).
-- `EMAIL_FROM` (opcional) — por exemplo `Atas Ala <atas-ala@seudominio.com.br>`, de um domínio verificado no Resend.
-
-O envio só funciona se o administrador ligar "e-mail" na ala (Administração).
+Segredos (Supabase → Edge Functions → Secrets), nunca no repositório: `RESEND_API_KEY` e, opcionalmente, `EMAIL_FROM` (de um domínio verificado no Resend). O envio só funciona se o administrador ligar "E-mail" na ala.

@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import { Icone } from '../componentes/Icones';
 import Logo from '../componentes/Logo';
 import { useAuth } from '../lib/auth';
-import { useManual } from '../lib/manual';
 
 interface Item { to: string; titulo: string; desc: string; icone: string; alerta?: boolean }
 
 export default function Home() {
   const { perfil, org } = useAuth();
-  const man = useManual(perfil?.id);
   const [modo, setModo] = useState<'lista' | 'icones'>(() => {
     try { return localStorage.getItem('menu') === 'lista' ? 'lista' : 'icones'; } catch { return 'icones'; }
   });
@@ -29,10 +27,10 @@ export default function Home() {
     );
     if (org?.entrevistas) itens.push({ to: '/entrevistas', titulo: 'Entrevistas', icone: 'entrevistas', desc: 'Quem foi entrevistado, quando e por quem. Pesquise antes das reuniões.' });
     itens.push(
-      { to: '/manual', titulo: 'Atualizações do Manual', icone: 'manual', desc: man.texto, alerta: man.alerta },
+      { to: '/manual', titulo: 'Estudo do Manual', icone: 'manual', desc: 'Um ponto do Manual Geral por semana, sorteado para a ala estudar.' },
       { to: '/conta', titulo: 'Minha conta', icone: 'conta', desc: 'Trocar a senha e apagar os dados deste aparelho.' },
     );
-    if (perfil.role !== 'user') itens.push({ to: '/admin', titulo: 'Administração', icone: 'admin', desc: 'Usuários, alas, e-mail e monitor do Manual.' });
+    if (perfil.role !== 'user') itens.push({ to: '/admin', titulo: 'Administração', icone: 'admin', desc: 'Usuários, alas, e-mail e destinatários.' });
   } else {
     itens.push({ to: '/entrar', titulo: 'Entrar', icone: 'entrar', desc: 'Para salvar atas, ver o calendário e acompanhar o Manual.' });
   }
