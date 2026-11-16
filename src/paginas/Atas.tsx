@@ -7,7 +7,7 @@ import { fd, quando, soma } from '../lib/datas';
 
 export default function Atas() {
   const { perfil, nuvem } = useAuth();
-  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem);
+  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem, perfil?.org_id);
   const nav = useNavigate();
   const arq = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState({ t: '', err: false });

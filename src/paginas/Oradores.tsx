@@ -13,7 +13,7 @@ const tomDe = (o: Orador) => {
 
 export default function Oradores() {
   const { perfil, nuvem } = useAuth();
-  const { atas, carregando } = useAtas(perfil?.id, nuvem);
+  const { atas, carregando } = useAtas(perfil?.id, nuvem, perfil?.org_id);
   const [busca, setBusca] = useState('');
   const [ordem, setOrdem] = useState<'antigos' | 'recentes' | 'mais'>('antigos');
   const [aberto, setAberto] = useState<string | null>(null);

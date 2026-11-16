@@ -8,7 +8,7 @@ import { novoId, useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
 import { fd, proxDomingo, quando } from '../lib/datas';
 import { SECOES } from '../lib/formulario';
-import { listarHistorico, listarOrgs, type Edicao, type Org } from '../lib/nuvem';
+import { listarHistorico, type Edicao } from '../lib/nuvem';
 import { indexarOradores } from '../lib/oradores';
 import { fit } from '../lib/pdf';
 import { CHAVES, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
@@ -21,7 +21,7 @@ function aparar(d: Dados): Dados {
 
 export default function Gerador() {
   const { perfil, nuvem } = useAuth();
-  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem);
+  const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem, perfil?.org_id);
   if (carregando) return <main><p className="mut">Carregando…</p></main>;
   return <Formulario atas={atas} salvar={salvar} />;
 }
@@ -40,20 +40,10 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const [curId, setCurId] = useState<string | null>(inicial ? inicial.id : null);
   const [msg, setMsg] = useState({ t: '', err: false });
   const [historico, setHistorico] = useState<Edicao[]>([]);
-  const [orgs, setOrgs] = useState<Org[]>([]);
-  const [orgSel, setOrgSel] = useState(inicial?.orgId ?? perfil?.org_id ?? '');
   const atual = curId ? atas.find((a) => a.id === curId) : undefined;
-  const global = perfil?.role === 'admin';
   const set = (k: keyof Dados, v: string | boolean) => setD((x) => ({ ...x, [k]: v }));
-  const orgAtual = atual?.orgId ?? (orgSel || perfil?.org_id || undefined);
-  const indice = useMemo(() => indexarOradores(atas, global ? orgAtual : undefined), [atas, global, orgAtual]);
+  const indice = useMemo(() => indexarOradores(atas, perfil?.org_id ?? undefined), [atas, perfil?.org_id]);
 
-  useEffect(() => {
-    if (!nuvem || !global) return;
-    let vivo = true;
-    void listarOrgs().then((l) => { if (vivo) setOrgs(l.filter((o) => o.nuvem)); });
-    return () => { vivo = false; };
-  }, [nuvem, global]);
 
   useEffect(() => {
     if (!nuvem || !curId) return;
@@ -97,7 +87,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
       r = { ...a[i], d: dd, atualizado: agora };
       a[i] = r;
     } else {
-      r = { v: 1, id: novoId(), criado: agora, atualizado: agora, d: dd, ...(global && orgSel ? { orgId: orgSel } : {}) };
+      r = { v: 1, id: novoId(), criado: agora, atualizado: agora, d: dd };
       a.push(r);
     }
     if (await salvar(a)) {
@@ -124,10 +114,6 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         {!perfil && ' Sem login, nada é salvo: o que você digita some ao fechar a página.'}
       </p>
 
-      {nuvem && global && !curId && orgs.length > 1 && (
-        <div className="g"><div className="wide"><label htmlFor="org">Salvar na ala</label>
-          <select id="org" value={orgSel} onChange={(e) => setOrgSel(e.target.value)}>{orgs.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}</select></div></div>
-      )}
 
       {nuvem && atual?.atualizadoPorNome && <p className="sub">Última edição por <b>{atual.atualizadoPorNome}</b> em {quando(atual.atualizado)}.</p>}
       {nuvem && historico.length > 1 && (
@@ -197,7 +183,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         })}
       </form>
 
-      <Enviar gerar={() => blobPdf(d)} nome={nomePdf(d)} titulo={titulo} dataTxt={fd(d.data)} orgId={atual?.orgId ?? (orgSel || undefined)} nuvem={nuvem} />
+      <Enviar gerar={() => blobPdf(d)} nome={nomePdf(d)} titulo={titulo} dataTxt={fd(d.data)} orgId={atual?.orgId ?? perfil?.org_id ?? undefined} nuvem={nuvem} />
 
       <div className="bar">
         <p className={'stbar' + (msg.err ? ' err' : '')} role="status" aria-live="polite">{msg.t}</p>

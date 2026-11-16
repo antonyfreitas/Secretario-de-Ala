@@ -29,7 +29,7 @@ export function apagarTudo(uid: string) {
   }
 }
 
-export function useAtas(uid: string | undefined, nuvem = false) {
+export function useAtas(uid: string | undefined, nuvem = false, orgId?: string | null) {
   const [atas, setAtas] = useState<Ata[]>(() => (uid && !nuvem ? carregar(uid) : []));
   const [carregando, setCarregando] = useState(nuvem);
 
@@ -42,7 +42,7 @@ export function useAtas(uid: string | undefined, nuvem = false) {
     }
     let vivo = true;
     setCarregando(true);
-    void listarAtas().then((l) => {
+    void listarAtas(orgId ?? undefined).then((l) => {
       if (!vivo) return;
       if (l) setAtas(l);
       setCarregando(false);
@@ -50,7 +50,7 @@ export function useAtas(uid: string | undefined, nuvem = false) {
     return () => {
       vivo = false;
     };
-  }, [uid, nuvem]);
+  }, [uid, nuvem, orgId]);
 
   const salvar = useCallback(
     async (nova: Ata[]): Promise<boolean> => {
@@ -71,14 +71,14 @@ export function useAtas(uid: string | undefined, nuvem = false) {
       for (const o of atas) {
         if (!nova.some((a) => a.id === o.id) && !(await excluirAta(o.id))) ok = false;
       }
-      const l = await listarAtas();
+      const l = await listarAtas(orgId ?? undefined);
       if (l) setAtas(l);
       return ok;
     },
-    [uid, nuvem, atas],
+    [uid, nuvem, orgId, atas],
   );
   const recarregar = useCallback(async () => {
-    const l = await listarAtas();
+    const l = await listarAtas(orgId ?? undefined);
     if (l) setAtas(l);
   }, []);
   return { atas, salvar, carregando, recarregar };

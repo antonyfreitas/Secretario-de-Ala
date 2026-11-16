@@ -196,7 +196,6 @@ export default function Admin() {
       </fieldset>
 
       <fieldset><legend>Destinatários da cópia (bispado)</legend>
-        {global && orgs.length > 1 && <div className="g"><div className="wide">{campoOrg(orgSel, setOrgSel, 'od')}</div></div>}
         <div className="acts"><button className="btn peq" type="button" onClick={() => setMDest(true)}>+ Adicionar</button></div>
         {dest.map((d) => (
           <div className="ln" key={d.id}>
@@ -209,7 +208,6 @@ export default function Admin() {
       </fieldset>
 
       <fieldset><legend>Modelo do e-mail da ata</legend>
-        {global && orgs.length > 1 && <div className="g"><div className="wide">{campoOrg(orgSel, setOrgSel, 'om')}</div></div>}
         <form className="col" onSubmit={salvarModelo}>
           <div><label htmlFor="ma">Assunto</label><input id="ma" type="text" autoComplete="off" maxLength={150} placeholder="Ata da reunião sacramental de {data} - {ala}" value={modelo.assunto} onChange={(e) => setModelo({ ...modelo, assunto: e.target.value })} /></div>
           <div><label htmlFor="mm">Mensagem</label><textarea id="mm" maxLength={2000} placeholder="Segue em anexo a ata da reunião sacramental de {data} da {ala}.&#10;&#10;Enviada por {usuario}." value={modelo.mensagem} onChange={(e) => setModelo({ ...modelo, mensagem: e.target.value })} /></div>

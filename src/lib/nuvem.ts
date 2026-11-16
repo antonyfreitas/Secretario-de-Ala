@@ -8,9 +8,11 @@ export interface Edicao { em: string; por: string | null; d: Dados }
 
 const COLUNAS = 'id,d,criado_em,atualizado_em,atualizado_por_nome,org_id';
 
-export async function listarAtas(): Promise<Ata[] | null> {
+export async function listarAtas(orgId?: string): Promise<Ata[] | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.from('atas_ala').select(COLUNAS).order('data', { ascending: false });
+  let q = supabase.from('atas_ala').select(COLUNAS).order('data', { ascending: false });
+  if (orgId) q = q.eq('org_id', orgId);
+  const { data, error } = await q;
   if (error) return null;
   return (data ?? []).map((r) => ({
     v: 1 as const,

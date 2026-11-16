@@ -9,7 +9,7 @@ const SEM_TESTEMUNHO: string[] = ['orador1', 'orador2', 'orador3', 'hinoInter'];
 
 export default function Calendario() {
   const { perfil, nuvem } = useAuth();
-  const { atas, carregando } = useAtas(perfil?.id, nuvem);
+  const { atas, carregando } = useAtas(perfil?.id, nuvem, perfil?.org_id);
   const nav = useNavigate();
   const [mes, setMes] = useState(() => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); });
   const hoje = new Date();
