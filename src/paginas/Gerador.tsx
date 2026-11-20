@@ -19,10 +19,13 @@ function aparar(d: Dados): Dados {
   return o;
 }
 
+/** "Ala Túnel Verde" vira "Túnel Verde" (o título da ata já traz a palavra Ala). */
+const nomeDaAla = (nome: string) => nome.replace(/^ala\s+/i, '');
+
 export default function Gerador() {
-  const { perfil, nuvem } = useAuth();
+  const { perfil, nuvem, carregando: entrando } = useAuth();
   const { atas, salvar, carregando } = useAtas(perfil?.id, nuvem, perfil?.org_id);
-  if (carregando) return <main><p className="mut">Carregando…</p></main>;
+  if (entrando || carregando) return <main><p className="mut">Carregando…</p></main>;
   return <Formulario atas={atas} salvar={salvar} />;
 }
 
@@ -34,7 +37,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const [d, setD] = useState<Dados>(() => {
     if (inicial) return limpar(inicial.d);
     const v = vazio(sp.get('data') || proxDomingo());
-    if (org) v.ala = org.nome.replace(/^ala\s+/i, '');
+    if (org) v.ala = nomeDaAla(org.nome);
     return v;
   });
   const [curId, setCurId] = useState<string | null>(inicial ? inicial.id : null);
@@ -42,6 +45,10 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const [historico, setHistorico] = useState<Edicao[]>([]);
   const atual = curId ? atas.find((a) => a.id === curId) : undefined;
   const set = (k: keyof Dados, v: string | boolean) => setD((x) => ({ ...x, [k]: v }));
+  // se a ala do usuário só ficar disponível depois, preenche o nome (sem sobrescrever o que ele digitou)
+  useEffect(() => {
+    if (org && !curId) setD((x) => (x.ala ? x : { ...x, ala: nomeDaAla(org.nome) }));
+  }, [org, curId]);
   const indice = useMemo(() => indexarOradores(atas, perfil?.org_id ?? undefined), [atas, perfil?.org_id]);
 
 
@@ -172,7 +179,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
                       ) : c.tipo === 'orador' ? (
                         <OradorInput id={c.id} valor={v} aoMudar={(x) => set(c.id, x)} indice={indice} dataAta={d.data} ataId={curId} outros={(['orador1', 'orador2', 'orador3'] as const).filter((k) => k !== c.id).map((k) => d[k])} />
                       ) : (
-                        <input id={c.id} className={cls} type={c.tipo ?? 'text'} inputMode={c.tipo === 'number' ? 'numeric' : undefined} value={v} autoComplete="off" onChange={(e) => set(c.id, e.target.value)} />
+                        <input id={c.id} className={cls} type={c.tipo ?? 'text'} inputMode={c.tipo === 'number' ? 'numeric' : undefined} placeholder={c.dica} value={v} autoComplete="off" onChange={(e) => set(c.id, e.target.value)} />
                       )}
                     </div>
                   );

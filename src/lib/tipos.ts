@@ -26,7 +26,7 @@ export const CAMPOS_PROGRESSO: ChaveTexto[] = [
 export function vazio(data = ''): Dados {
   const d = { incluirOr: true, semAssuntos: false, pronta: false, testemunhos: false } as Dados;
   for (const k of CHAVES) d[k] = '';
-  d.ala = 'Ipanema';
+  d.ala = '';
   d.data = data;
   return d;
 }

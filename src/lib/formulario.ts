@@ -5,7 +5,7 @@ export interface Campo { id: keyof Dados; rotulo: string; tipo?: Tipo; dica?: st
 
 export const SECOES: [string, Campo[]][] = [
   ['Informações', [
-    { id: 'ala', rotulo: 'Ala' }, { id: 'data', rotulo: 'Data', tipo: 'date' }, { id: 'freq', rotulo: 'Frequência', tipo: 'number' },
+    { id: 'ala', rotulo: 'Ala', dica: 'Nome da ala, ex.: Ipanema' }, { id: 'data', rotulo: 'Data', tipo: 'date' }, { id: 'freq', rotulo: 'Frequência', tipo: 'number' },
     { id: 'presidida', rotulo: 'Presidida' }, { id: 'dirigida', rotulo: 'Dirigida' }, { id: 'regente', rotulo: 'Regente' }, { id: 'pianista', rotulo: 'Pianista' },
   ]],
   ['Abertura', [
