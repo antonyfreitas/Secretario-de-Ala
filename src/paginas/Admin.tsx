@@ -18,8 +18,7 @@ export default function Admin() {
   const [msg, setMsg] = useState({ t: '', err: false });
   const [novaOrg, setNovaOrg] = useState('');
   const [novo, setNovo] = useState({ usuario: '', nome: '', role: 'user', org: perfil?.org_id ?? '', senha: gerarSenha() });
-  const [novoDest, setNovoDest] = useState({ nome: '', papel: 'bispo', email: '', whatsapp: '' });
-  const [modelo, setModelo] = useState({ assunto: '', mensagem: '' });
+  const [novoDest, setNovoDest] = useState({ nome: '', papel: 'bispo', whatsapp: '' });
   const [mOrg, setMOrg] = useState(false);
   const [mUser, setMUser] = useState(false);
   const [mDest, setMDest] = useState(false);
@@ -45,12 +44,8 @@ export default function Admin() {
   const carregarDest = async (o: string) => setDest(await listarDestinatarios(o));
   useEffect(() => { void carregarOrgs(); void carregarUsuarios(); }, []);
   useEffect(() => { if (orgSel) void carregarDest(orgSel); }, [orgSel]);
-  useEffect(() => {
-    const o = orgs.find((x) => x.id === orgSel);
-    if (o) setModelo({ assunto: o.emailAssunto ?? '', mensagem: o.emailMensagem ?? '' });
-  }, [orgs, orgSel]);
 
-  const alternar = async (o: Org, campo: 'nuvem_ativa' | 'email_ativo' | 'entrevistas_ativo', atual: boolean, rotulo: string) => {
+  const alternar = async (o: Org, campo: 'nuvem_ativa' | 'entrevistas_ativo', atual: boolean, rotulo: string) => {
     if (!supabase) return;
     const { error } = await supabase.from('organizacoes').update({ [campo]: !atual }).eq('id', o.id);
     if (error) return aviso(`Não foi possível alterar: ${rotulo}.`, true);
@@ -58,15 +53,6 @@ export default function Admin() {
     if (o.id === perfil?.org_id) await recarregarNuvem();
     aviso(`${o.nome}: ${rotulo} ${!atual ? 'ligado' : 'desligado'}.`);
   };
-  const salvarModelo = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!supabase || !orgSel) return;
-    const { error } = await supabase.from('organizacoes').update({ email_assunto: modelo.assunto.trim() || null, email_mensagem: modelo.mensagem.trim() || null }).eq('id', orgSel);
-    if (error) return aviso('Não foi possível salvar o modelo.', true);
-    await carregarOrgs();
-    aviso('Modelo do e-mail salvo.');
-  };
-  const previa = (t: string) => t.split('{ala}').join(nomeOrg(orgSel)).split('{data}').join('25/10/2026').split('{usuario}').join(perfil?.usuario ?? '');
 
   const criarOrg = async (e: FormEvent) => {
     e.preventDefault();
@@ -137,9 +123,9 @@ export default function Admin() {
     e.preventDefault();
     if (!supabase || !orgSel) return;
     const zap = novoDest.whatsapp.replace(/\D/g, '');
-    const { error } = await supabase.from('destinatarios').insert({ org_id: orgSel, nome: novoDest.nome.trim(), papel: novoDest.papel, email: novoDest.email.trim() || null, whatsapp: zap || null });
-    if (error) return aviso('Não foi possível adicionar. Confira o e-mail e o WhatsApp (só números, com DDI e DDD, ex.: 5551999999999).', true);
-    setNovoDest({ nome: '', papel: 'bispo', email: '', whatsapp: '' });
+    const { error } = await supabase.from('destinatarios').insert({ org_id: orgSel, nome: novoDest.nome.trim(), papel: novoDest.papel, whatsapp: zap || null });
+    if (error) return aviso('Não foi possível adicionar. Confira o WhatsApp (só números, com DDI e DDD, ex.: 5551999999999).', true);
+    setNovoDest({ nome: '', papel: 'bispo', whatsapp: '' });
     setMDest(false);
     aviso('Destinatário adicionado.');
     await carregarDest(orgSel);
@@ -171,13 +157,12 @@ export default function Admin() {
             <div><b>{o.nome}</b> <span>{qtd(o)} {qtd(o) === 1 ? 'usuário' : 'usuários'}</span></div>
             <div className="acts">
               <button className={'btn sw' + (o.nuvem ? ' on2' : '')} type="button" aria-pressed={o.nuvem} onClick={() => void alternar(o, 'nuvem_ativa', o.nuvem, 'atas na nuvem')}>Nuvem</button>
-              <button className={'btn sw' + (o.emailAtivo ? ' on2' : '')} type="button" aria-pressed={o.emailAtivo} onClick={() => void alternar(o, 'email_ativo', o.emailAtivo, 'envio por e-mail')}>E-mail</button>
               <button className={'btn sw' + (o.entrevistasAtivo ? ' on2' : '')} type="button" aria-pressed={o.entrevistasAtivo} onClick={() => void alternar(o, 'entrevistas_ativo', o.entrevistasAtivo, 'entrevistas')}>Entrevistas</button>
               {global && <button className="btn sw perigo" type="button" onClick={() => void excluirOrg(o)}>{armado === o.id ? 'Confirmar' : 'Excluir'}</button>}
             </div>
           </div>
         ))}
-        <p className="sub">Botão preenchido = ligado. Nuvem: atas compartilhadas na ala. E-mail: envio da ata aos destinatários. Entrevistas: registro de entrevistas. Ligar guarda dados fora do aparelho: só com a autorização do bispo e conforme as regras da Igreja.</p>
+        <p className="sub">Botão preenchido = ligado. Nuvem: atas compartilhadas na ala. Entrevistas: registro de entrevistas. Ligar guarda dados fora do aparelho: só com a autorização do bispo e conforme as regras da Igreja.</p>
       </fieldset>
 
       <fieldset><legend>Usuários</legend>
@@ -199,27 +184,18 @@ export default function Admin() {
         <div className="acts"><button className="btn peq" type="button" onClick={() => setMDest(true)}>+ Adicionar</button></div>
         {dest.map((d) => (
           <div className="ln" key={d.id}>
-            <div><b>{d.nome}</b> <span>{d.papel}{d.email ? ` · ${d.email}` : ''}{d.whatsapp ? ` · WhatsApp ${d.whatsapp}` : ''}</span></div>
+            <div><b>{d.nome}</b> <span>{d.papel}{d.whatsapp ? ` · WhatsApp ${d.whatsapp}` : ''}</span></div>
             <button className="btn sw perigo" type="button" onClick={() => void delDest(d)}>Remover</button>
           </div>
         ))}
         {dest.length === 0 && <p className="mut">Nenhum destinatário ainda.</p>}
-        <p className="sub">E-mails e telefones ficam no servidor, visíveis só para os usuários da ala. Cadastre só quem precisa receber a cópia.</p>
-      </fieldset>
-
-      <fieldset><legend>Modelo do e-mail da ata</legend>
-        <form className="col" onSubmit={salvarModelo}>
-          <div><label htmlFor="ma">Assunto</label><input id="ma" type="text" autoComplete="off" maxLength={150} placeholder="Ata da reunião sacramental de {data} - {ala}" value={modelo.assunto} onChange={(e) => setModelo({ ...modelo, assunto: e.target.value })} /></div>
-          <div><label htmlFor="mm">Mensagem</label><textarea id="mm" maxLength={2000} placeholder="Segue em anexo a ata da reunião sacramental de {data} da {ala}.&#10;&#10;Enviada por {usuario}." value={modelo.mensagem} onChange={(e) => setModelo({ ...modelo, mensagem: e.target.value })} /></div>
-          <p className="sub">Use {'{ala}'}, {'{data}'} e {'{usuario}'}. Em branco, vale o modelo padrão. Prévia do assunto: {previa(modelo.assunto || 'Ata da reunião sacramental de {data} - {ala}')}</p>
-          <div className="acts"><button className="btn peq" type="submit">Salvar modelo</button></div>
-        </form>
+        <p className="sub">Os telefones ficam no servidor, visíveis só para os usuários da ala. Cadastre só quem precisa receber a cópia.</p>
       </fieldset>
 
       <Modal aberto={mOrg} titulo="Nova ala" aoFechar={() => setMOrg(false)}>
         <form className="col" onSubmit={criarOrg}>
           <div><label htmlFor="no">Nome da ala (ex.: Ala Centro)</label><input id="no" type="text" autoComplete="off" value={novaOrg} onChange={(e) => setNovaOrg(e.target.value)} required minLength={2} maxLength={80} /></div>
-          <p className="sub">A ala nasce com nuvem, e-mail e entrevistas desligados. Depois, cadastre os usuários dela.</p>
+          <p className="sub">A ala nasce com nuvem e entrevistas desligadas. Depois, cadastre os usuários dela.</p>
           <div className="acts"><button className="btn" type="button" onClick={() => setMOrg(false)}>Cancelar</button><button className="btn p" type="submit">Criar ala</button></div>
         </form>
       </Modal>
@@ -252,7 +228,6 @@ export default function Admin() {
         <form className="col" onSubmit={addDest}>
           <div><label htmlFor="dn">Nome</label><input id="dn" type="text" autoComplete="off" value={novoDest.nome} onChange={(e) => setNovoDest({ ...novoDest, nome: e.target.value })} required minLength={2} /></div>
           <div><label htmlFor="dp">Função</label><select id="dp" value={novoDest.papel} onChange={(e) => setNovoDest({ ...novoDest, papel: e.target.value })}><option value="bispo">Bispo</option><option value="conselheiro">Conselheiro</option><option value="secretario">Secretário</option><option value="outro">Outro</option></select></div>
-          <div><label htmlFor="de">E-mail (opcional)</label><input id="de" type="text" inputMode="email" autoCapitalize="none" autoComplete="off" value={novoDest.email} onChange={(e) => setNovoDest({ ...novoDest, email: e.target.value })} /></div>
           <div><label htmlFor="dw">WhatsApp (opcional, com DDI e DDD)</label><input id="dw" type="text" inputMode="numeric" autoComplete="off" placeholder="5551999999999" value={novoDest.whatsapp} onChange={(e) => setNovoDest({ ...novoDest, whatsapp: e.target.value })} /></div>
           <div className="acts"><button className="btn" type="button" onClick={() => setMDest(false)}>Cancelar</button><button className="btn p" type="submit">Adicionar</button></div>
         </form>

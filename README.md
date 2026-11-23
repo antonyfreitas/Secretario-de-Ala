@@ -7,7 +7,7 @@ Site em React + TypeScript (Vite). O gerador de atas é aberto a todos; salvar a
 - `src/` — o aplicativo (rotas com histórico: o botão Voltar do navegador funciona).
 - `src/dados/manual-pontos.txt` — números e títulos dos pontos do Manual Geral, usados no sorteio semanal de estudo (só a estrutura; nenhum texto do Manual).
 - `supabase/migrations/` — esquema do banco com RLS (políticas de acesso por usuário e por ala).
-- `supabase/functions/enviar-ata/` — função que envia a ata por e-mail (Resend).
+- `supabase/functions/enviar-ata/` — função de envio por e-mail (Resend), hoje desativada e não publicada.
 - `legacy/index.html` — versão antiga em arquivo único (só para consulta).
 
 ## Segurança
@@ -16,7 +16,7 @@ Site em React + TypeScript (Vite). O gerador de atas é aberto a todos; salvar a
 - Sem cadastro aberto: usuários são criados por administradores. Sem perfil ativo, não há acesso a nada.
 - Cabeçalhos em `vercel.json` (CSP restrita, HSTS, sem iframe, sem referrer).
 - Sessão encerra sozinha após 30 minutos parada. Senha trocada no primeiro acesso; depois, só o administrador da ala redefine.
-- Recursos que guardam dados fora do aparelho (nuvem, e-mail, entrevistas) nascem desligados em cada ala.
+- Recursos que guardam dados fora do aparelho (nuvem, entrevistas) nascem desligados em cada ala.
 - Nunca suba dados de membros ao repositório. Segredos só em variáveis de ambiente.
 
 ## Configuração
@@ -29,6 +29,6 @@ npm run dev     # desenvolvimento
 npm run build   # verifica tipos e gera dist/
 ```
 
-## Envio da ata por e-mail
+## Envio da ata
 
-Segredos (Supabase → Edge Functions → Secrets), nunca no repositório: `RESEND_API_KEY` e, opcionalmente, `EMAIL_FROM` (de um domínio verificado no Resend). O envio só funciona se o administrador ligar "E-mail" na ala.
+O envio por e-mail está desativado e foi retirado da interface. A ata sai por "Compartilhar PDF" (WhatsApp ou outro app do aparelho) e por "Baixar PDF". O código da função (`supabase/functions/enviar-ata/`) e as colunas do banco ficam guardados caso o envio volte a ser necessário.

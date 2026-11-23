@@ -30,7 +30,7 @@ export default function Home() {
       { to: '/manual', titulo: 'Estudo do Manual', icone: 'manual', desc: 'Um ponto do Manual Geral por semana, sorteado para a ala estudar.' },
       { to: '/conta', titulo: 'Minha conta', icone: 'conta', desc: 'Trocar a senha e apagar os dados deste aparelho.' },
     );
-    if (perfil.role !== 'user') itens.push({ to: '/admin', titulo: 'Administração', icone: 'admin', desc: 'Usuários, alas, e-mail e destinatários.' });
+    if (perfil.role !== 'user') itens.push({ to: '/admin', titulo: 'Administração', icone: 'admin', desc: 'Usuários, alas e destinatários.' });
   } else {
     itens.push({ to: '/entrar', titulo: 'Entrar', icone: 'entrar', desc: 'Para salvar atas, ver o calendário e acompanhar o Manual.' });
   }
