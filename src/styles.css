@@ -184,3 +184,8 @@ dialog.modal::backdrop{background:rgba(0,0,0,.5)}
 .barra i.p90{width:90%}
 .barra i.p95{width:95%}
 .barra i.p100{width:100%}
+.rodape{max-width:720px;margin:28px auto 24px;padding:0 16px;text-align:center;color:var(--mut);font-size:.8rem;line-height:1.4}
+.rodape a{color:var(--acc);font-weight:700}
+.aviso{border-left:4px solid var(--acc);background:var(--line);border-radius:8px;padding:10px 12px;font-weight:600}
+main h2{font-size:1.1rem;margin:20px 0 4px}
+.lista{padding-left:18px}

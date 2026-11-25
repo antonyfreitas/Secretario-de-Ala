@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { AVISO } from '../dados/sobre';
 import { useAuth } from '../lib/auth';
 import { Icone } from './Icones';
 import Logo from './Logo';
@@ -34,6 +35,7 @@ export default function Layout() {
         </span>
       </header>
       <Outlet />
+      <footer className="rodape"><span>{AVISO}</span> <Link to="/sobre">Sobre</Link></footer>
     </>
   );
 }

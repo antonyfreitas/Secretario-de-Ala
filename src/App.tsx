@@ -11,6 +11,7 @@ import Home from './paginas/Home';
 import Login from './paginas/Login';
 import Oradores from './paginas/Oradores';
 import ManualEstudo from './paginas/ManualEstudo';
+import Sobre from './paginas/Sobre';
 import TrocarSenha from './paginas/TrocarSenha';
 
 function Protegida({ admin }: { admin?: boolean }) {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/gerador" element={<GeradorRota />} />
         <Route path="/entrar" element={<Login />} />
+        <Route path="/sobre" element={<Sobre />} />
         <Route element={<Protegida />}>
           <Route path="/atas" element={<Atas />} />
           <Route path="/atas/:id" element={<GeradorRota />} />
