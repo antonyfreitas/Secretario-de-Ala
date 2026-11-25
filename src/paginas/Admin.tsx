@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import Modal from '../componentes/Modal';
 import { ROTULO_PAPEL, useAuth, type Perfil } from '../lib/auth';
+import { adicionarContato, listarContatos, removerContato, type Contato } from '../lib/contatos';
 import { listarDestinatarios, listarOrgs, type Destinatario, type Org } from '../lib/nuvem';
 import { gerarSenha } from '../lib/senha';
 import { supabase } from '../lib/supabase';
@@ -22,6 +23,9 @@ export default function Admin() {
   const [mOrg, setMOrg] = useState(false);
   const [mUser, setMUser] = useState(false);
   const [mDest, setMDest] = useState(false);
+  const [contatos, setContatos] = useState<Contato[]>([]);
+  const [mContato, setMContato] = useState(false);
+  const [novoContato, setNovoContato] = useState({ nome: '', contato: '' });
   const [mostrada, setMostrada] = useState<{ texto: string; senha: string } | null>(null);
   const [ed, setEd] = useState<Edicao | null>(null);
   const [armado, setArmado] = useState<string | null>(null);
@@ -42,7 +46,8 @@ export default function Admin() {
     else setLista((data ?? []) as Perfil[]);
   };
   const carregarDest = async (o: string) => setDest(await listarDestinatarios(o));
-  useEffect(() => { void carregarOrgs(); void carregarUsuarios(); }, []);
+  const carregarContatos = async () => setContatos((await listarContatos()) ?? []);
+  useEffect(() => { void carregarOrgs(); void carregarUsuarios(); if (global) void carregarContatos(); }, [global]);
   useEffect(() => { if (orgSel) void carregarDest(orgSel); }, [orgSel]);
 
   const alternar = async (o: Org, campo: 'nuvem_ativa' | 'entrevistas_ativo', atual: boolean, rotulo: string) => {
@@ -130,6 +135,19 @@ export default function Admin() {
     aviso('Destinatário adicionado.');
     await carregarDest(orgSel);
   };
+  const addContato = async (e: FormEvent) => {
+    e.preventDefault();
+    const ok = await adicionarContato(novoContato.nome, novoContato.contato, contatos.length + 1);
+    if (!ok) return aviso('Não foi possível adicionar (confira o nome e o contato).', true);
+    setNovoContato({ nome: '', contato: '' });
+    setMContato(false);
+    aviso('Contato adicionado à página Sobre.');
+    await carregarContatos();
+  };
+  const delContato = async (c: Contato) => {
+    if (!(await removerContato(c.id))) return aviso('Não foi possível remover.', true);
+    await carregarContatos();
+  };
   const delDest = async (d: Destinatario) => {
     if (!supabase) return;
     const { error } = await supabase.from('destinatarios').delete().eq('id', d.id);
@@ -180,6 +198,20 @@ export default function Admin() {
         ))}
       </fieldset>
 
+      {global && (
+        <fieldset><legend>Contato dos administradores (página Sobre)</legend>
+          <div className="acts"><button className="btn peq" type="button" onClick={() => setMContato(true)}>+ Adicionar</button></div>
+          {contatos.map((c) => (
+            <div className="ln" key={c.id}>
+              <div><b>{c.nome}</b> <span>{c.contato}</span></div>
+              <button className="btn sw perigo" type="button" onClick={() => void delContato(c)}>Remover</button>
+            </div>
+          ))}
+          {contatos.length === 0 && <p className="mut">Nenhum contato ainda.</p>}
+          <p className="sub">Aparece para qualquer pessoa na página Sobre, sem precisar entrar. O Manual pede mais de um administrador{contatos.length === 1 ? ': falta cadastrar mais um' : ''}.</p>
+        </fieldset>
+      )}
+
       <fieldset><legend>Destinatários da cópia (bispado)</legend>
         <div className="acts"><button className="btn peq" type="button" onClick={() => setMDest(true)}>+ Adicionar</button></div>
         {dest.map((d) => (
@@ -222,6 +254,15 @@ export default function Admin() {
             <div className="acts"><button className="btn" type="button" onClick={() => setEd(null)}>Cancelar</button><button className="btn p" type="submit">Salvar</button></div>
           </form>
         )}
+      </Modal>
+
+      <Modal aberto={mContato} titulo="Novo contato" aoFechar={() => setMContato(false)}>
+        <form className="col" onSubmit={addContato}>
+          <div><label htmlFor="cn">Nome</label><input id="cn" type="text" autoComplete="off" value={novoContato.nome} onChange={(e) => setNovoContato({ ...novoContato, nome: e.target.value })} required minLength={2} maxLength={80} /></div>
+          <div><label htmlFor="cc">Contato (e-mail ou WhatsApp)</label><input id="cc" type="text" autoCapitalize="none" autoComplete="off" value={novoContato.contato} onChange={(e) => setNovoContato({ ...novoContato, contato: e.target.value })} required minLength={3} maxLength={120} /></div>
+          <p className="sub">Este contato fica público na página Sobre.</p>
+          <div className="acts"><button className="btn" type="button" onClick={() => setMContato(false)}>Cancelar</button><button className="btn p" type="submit">Adicionar</button></div>
+        </form>
       </Modal>
 
       <Modal aberto={mDest} titulo="Novo destinatário" aoFechar={() => setMDest(false)}>

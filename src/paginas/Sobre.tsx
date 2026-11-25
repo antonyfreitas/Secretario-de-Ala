@@ -1,7 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ADMINISTRADORES, AVISO } from '../dados/sobre';
+import { AVISO } from '../dados/sobre';
+import { listarContatos, type Contato } from '../lib/contatos';
 
 export default function Sobre() {
+  const [contatos, setContatos] = useState<Contato[] | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    void listarContatos().then((l) => { if (vivo) setContatos(l ?? []); });
+    return () => { vivo = false; };
+  }, []);
+
   return (
     <main>
       <Link className="back" to="/">‹ Início</Link>
@@ -18,11 +27,11 @@ export default function Sobre() {
       <p>O site não usa logomarca nem o nome oficial da Igreja. O Manual Geral é citado apenas pelo número do item, com link para a versão oficial em ChurchofJesusChrist.org.</p>
 
       <h2>Contato dos administradores</h2>
-      {ADMINISTRADORES.length === 0 ? (
+      {contatos === null ? <p className="mut">Carregando…</p> : contatos.length === 0 ? (
         <p className="mut">Contato em definição. Enquanto isso, fale com quem lhe deu acesso ao site.</p>
       ) : (
         <ul className="lista">
-          {ADMINISTRADORES.map((a) => <li key={a.nome}><b>{a.nome}</b> · {a.contato}</li>)}
+          {contatos.map((c) => <li key={c.id}><b>{c.nome}</b> · {c.contato}</li>)}
         </ul>
       )}
     </main>
