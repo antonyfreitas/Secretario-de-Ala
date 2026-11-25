@@ -12,6 +12,7 @@ import { SECOES } from '../lib/formulario';
 import { listarHistorico, type Edicao } from '../lib/nuvem';
 import { indexarOradores } from '../lib/oradores';
 import { fit } from '../lib/pdf';
+import { extrasDoRoteiro } from '../lib/roteiroPdf';
 import { CHAVES, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
 
 function aparar(d: Dados): Dados {
@@ -67,17 +68,17 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const nomePdf = (x: Dados, sufixo = '') => `ata-ala-${slug(x.ala)}-${x.data || 'sem-data'}${sufixo}.pdf`;
   const blobPdf = (x: Dados): Blob | null => {
     try {
-      return fit(aparar(x))!.doc.output('blob');
+      return fit(aparar(x), extrasDoRoteiro(perfil?.id, x.data, x.ala))!.doc.output('blob');
     } catch {
       return null;
     }
   };
   const baixarPdf = (x: Dados, sufixo = '') => {
     try {
-      const r = fit(aparar(x))!;
+      const r = fit(aparar(x), extrasDoRoteiro(perfil?.id, x.data, x.ala))!;
       const nome = nomePdf(x, sufixo);
       baixar(r.doc.output('blob'), nome);
-      const nota = r.over ? ' Atenção: conteúdo demais, parte pode ter ficado de fora.' : r.s < 0.8 ? ' Letras reduzidas para caber em 1 folha.' : '';
+      const nota = r.over ? ' Atenção: conteúdo demais, parte pode ter ficado de fora.' : r.folha ? ' As falas foram para a Folha de falas (página 2).' : r.s < 0.8 ? ' Letras reduzidas para caber em 1 folha.' : '';
       setMsg({ t: `PDF pronto: ${nome}.${nota}`, err: false });
     } catch {
       setMsg({ t: 'Não foi possível gerar o PDF. Recarregue a página e tente de novo.', err: true });

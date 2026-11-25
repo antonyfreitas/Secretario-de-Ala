@@ -7,7 +7,7 @@ import { ymd } from './datas';
  * depois do domingo. Nada daqui vai para o servidor: o Manual 30.6 pede sigilo sobre chamados e
  * desobrigações até o anúncio.
  */
-export interface EstadoRoteiro { versao: 1; data: string; liga: Record<string, boolean>; itens: ItemRoteiro[] }
+export interface EstadoRoteiro { versao: 1; data: string; liga: Record<string, boolean>; itens: ItemRoteiro[]; folhaSeparada?: boolean }
 
 const PREFIXO = 'roteiro:';
 const chave = (uid: string | undefined, data: string) => `${PREFIXO}${uid ?? 'visitante'}:${data}`;
@@ -29,7 +29,7 @@ export function carregarRoteiro(uid: string | undefined, data: string): EstadoRo
     }
     const validos = new Set<string>(BLOCOS.map((b) => b.id));
     const itens = Array.isArray(salvo.itens) ? salvo.itens.filter((i) => i && validos.has(i.bloco) && typeof i.id === 'string') : [];
-    return { versao: 1, data, liga, itens };
+    return { versao: 1, data, liga, itens, folhaSeparada: !!salvo.folhaSeparada };
   } catch {
     return base;
   }

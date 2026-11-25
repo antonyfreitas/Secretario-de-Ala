@@ -8,7 +8,7 @@ const NOTA='Apoio e desobrigações / Apresentação dos apoiados no S. Aarônic
 export const fd=s=>s?s.split('-').reverse().join('/'):'';
 export const lines=s=>(s||'').split('\n').map(t=>t.trim()).filter(Boolean);
 
-export function buildPdf(d,s){
+export function buildPdf(d,s,ex,modo){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const M=12,CW=186,PH=297,LH=4.6*s,P=2*s,MH=8*s,GAP=2.6*s,BH=5.6*s,F=10*s,INK=[18,49,43];
   let y=M,over=false;
@@ -56,6 +56,17 @@ export function buildPdf(d,s){
     y+=h;
   };
 
+  const fala=(label,text)=>{
+    doc.setFont('helvetica','bold');doc.setFontSize(F*.95);
+    const lb=doc.splitTextToSize(label,CW-2*P);
+    doc.setFont('helvetica','normal');
+    const t=doc.splitTextToSize(text,CW-2*P),h=2*P+lb.length*LH+t.length*LH;
+    need(h);doc.rect(M,y,CW,h);
+    lb.forEach((q,i)=>txt(q,M+P,y+P+F*.31+i*LH,'bold',F*.95));
+    t.forEach((q,i)=>txt(q,M+P,y+P+F*.31+lb.length*LH+i*LH,'normal',F*.95));
+    y+=h;
+  };
+
   const T=17*s,tb=y+T*.3;
   txt('Ata - Ala '+(d.ala||'')+(d.data?' - '+fd(d.data):''),M,tb,'bold',T);
   doc.setFont('helvetica','bold');doc.setFontSize(F);
@@ -72,7 +83,10 @@ export function buildPdf(d,s){
   list('Anúncios','',lines(d.anuncios));
   cells([['Hino de abertura',d.hinoAbertura,CW/2],['Oração de abertura',d.oracaoAbertura,CW/2]]);
   y+=GAP;bar('Assuntos da ala e da estaca');
-  list('',NOTA,lines(d.assuntos));
+  if(ex&&ex.falas&&ex.falas.length){
+    ex.falas.forEach(f=>{if(modo==='dentro')fala(f.titulo,f.texto);else cells([[f.titulo,'fala na folha de falas',CW]])});
+    if(lines(d.assuntos).length)list('Outros assuntos','',lines(d.assuntos));
+  }else list('',NOTA,lines(d.assuntos));
   y+=GAP;bar('Sacramento');
   cells([['Hino sacramental',d.hinoSacramental,CW]]);
   if(d.incluirOr){prayer('Benção do Pão',PAO);prayer('Benção da Água',AGUA)}
@@ -89,7 +103,36 @@ export function buildPdf(d,s){
   }
   y+=GAP;bar('Encerramento');
   cells([['Último hino',d.ultimoHino,CW/2],['Última oração',d.ultimaOracao,CW/2]]);
-  return{doc,over,s};
+  return{doc,over,s,folha:false};
 }
-export function fit(d){let r;for(let k=20;k>=10;k--){r=buildPdf(d,k/20);if(!r.over)break}return r}
+function tentar(d,ex,modo){let r;for(let k=20;k>=10;k--){r=buildPdf(d,k/20,ex,modo);if(!r.over)break}return r}
+
+// Folha de falas: página(s) extra, letra grande, só com os blocos usados, na ordem do programa.
+function folhaDeFalas(doc,d,ex){
+  const M=16,W=178,PH=297,INK=[18,49,43],CINZA=[90,105,98];
+  let y=M;
+  const txt=(t,x,yy,st='normal',sz=14,col=INK)=>{doc.setFont('helvetica',st);doc.setFontSize(sz);doc.setTextColor(col[0],col[1],col[2]);doc.text(t,x,yy)};
+  doc.addPage();
+  txt('Folha de falas - Ala '+(d.ala||'')+(d.data?' - '+fd(d.data):''),M,y+6,'bold',17);y+=13;
+  txt('Reunião sacramental. Leia na ordem. (pausa) = uma pequena pausa.',M,y,'normal',10,CINZA);y+=9;
+  ex.falas.forEach(f=>{
+    doc.setFont('helvetica','bold');doc.setFontSize(13);
+    const lb=doc.splitTextToSize(f.titulo,W);
+    doc.setFont('helvetica','normal');doc.setFontSize(15);
+    const t=doc.splitTextToSize(f.texto,W),h=lb.length*6+t.length*7.2+12;
+    if(y+h>PH-18){doc.addPage();y=M}
+    lb.forEach((q,i)=>txt(q,M,y+i*6,'bold',13));y+=lb.length*6+1;
+    t.forEach((q,i)=>txt(q,M,y+i*7.2,'normal',15));y+=t.length*7.2+2;
+    txt(f.origem,M,y+1,'italic',9,CINZA);y+=10;
+  });
+  const n=doc.getNumberOfPages();
+  for(let p=2;p<=n;p++){doc.setPage(p);txt('Ferramenta independente, não oficial. Apoio e desobrigação conforme o Manual Geral 30.3 e 30.6.',M,PH-10,'normal',8.5,[130,145,138])}
+}
+
+// Sem falas: igual a antes (1 folha). Com falas: dentro da ata se couberem em letra legível; senão, resumo na ata + folha de falas.
+export function fit(d,ex){
+  if(!ex||!ex.falas||!ex.falas.length)return tentar(d,undefined,'dentro');
+  if(!ex.folhaSeparada){const r=tentar(d,ex,'dentro');if(!r.over&&r.s>=0.8)return r}
+  const r=tentar(d,ex,'resumo');folhaDeFalas(r.doc,d,ex);r.folha=true;return r;
+}
 

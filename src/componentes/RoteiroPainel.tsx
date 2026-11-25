@@ -21,6 +21,7 @@ function Fala({ texto }: { texto: string }) {
 export default function RoteiroPainel({ uid, data, testemunhos, ala }: Props) {
   const [liga, setLiga] = useState<Record<string, boolean>>(padraoLiga);
   const [itens, setItens] = useState<ItemRoteiro[]>([]);
+  const [folhaSep, setFolhaSep] = useState(false);
 
   useEffect(() => { limparExpirados(); }, []);
   useEffect(() => {
@@ -28,12 +29,14 @@ export default function RoteiroPainel({ uid, data, testemunhos, ala }: Props) {
     const e = carregarRoteiro(uid, data);
     setLiga(e.liga);
     setItens(e.itens);
+    setFolhaSep(!!e.folhaSeparada);
   }, [uid, data]);
 
-  const gravar = (l: Record<string, boolean>, it: ItemRoteiro[]) => {
+  const gravar = (l: Record<string, boolean>, it: ItemRoteiro[], fs = folhaSep) => {
     setLiga(l);
     setItens(it);
-    if (data) salvarRoteiro(uid, { versao: 1, data, liga: l, itens: it });
+    setFolhaSep(fs);
+    if (data) salvarRoteiro(uid, { versao: 1, data, liga: l, itens: it, folhaSeparada: fs });
   };
   const atualizar = (id: string, mudanca: Partial<ItemRoteiro>) => gravar(liga, itens.map((i) => (i.id === id ? { ...i, ...mudanca } : i)));
   const ligados = PROGRAMA.filter((i) => liga[i.id]).length;
@@ -100,9 +103,11 @@ export default function RoteiroPainel({ uid, data, testemunhos, ala }: Props) {
             </div>
           )}
 
+          <label className="chk"><input type="checkbox" checked={folhaSep} onChange={(e) => gravar(liga, itens, e.target.checked)} /> Sempre imprimir as falas em folha separada (letra grande)</label>
+          <p className="sub">No PDF, as falas entram na ata quando cabem em letra legível; se não couberem, vão para a Folha de falas (página 2). Só saem os blocos com nome{' '}e chamado preenchidos.</p>
           <div className="acts">
             <button className="btn peq" type="button" onClick={() => gravar(padraoLiga(), itens)}>Restaurar padrão</button>
-            <button className="btn peq" type="button" onClick={() => { apagarRoteiro(uid, data); setLiga(padraoLiga()); setItens([]); }}>Apagar deste aparelho</button>
+            <button className="btn peq" type="button" onClick={() => { apagarRoteiro(uid, data); setLiga(padraoLiga()); setItens([]); setFolhaSep(false); }}>Apagar deste aparelho</button>
           </div>
         </>
       )}
