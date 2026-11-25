@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import Enviar from '../componentes/Enviar';
 import HinoInput from '../componentes/HinoInput';
 import OradorInput from '../componentes/OradorInput';
+import RoteiroPainel from '../componentes/RoteiroPainel';
 import { baixar, slug } from '../lib/arquivo';
 import { novoId, useAtas } from '../lib/armazem';
 import { useAuth } from '../lib/auth';
@@ -142,6 +143,8 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
       {primeiroDomingo && !d.testemunhos && (
         <p className="sub">Este é o primeiro domingo do mês. <button className="lnk2" type="button" onClick={() => set('testemunhos', true)}>Mudar para jejum e testemunhos</button></p>
       )}
+
+      <RoteiroPainel uid={perfil?.id} data={d.data} testemunhos={d.testemunhos} />
 
       <form onSubmit={(e) => e.preventDefault()}>
         {SECOES.map(([secao, campos]) => {
