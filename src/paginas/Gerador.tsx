@@ -144,7 +144,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         <p className="sub">Este é o primeiro domingo do mês. <button className="lnk2" type="button" onClick={() => set('testemunhos', true)}>Mudar para jejum e testemunhos</button></p>
       )}
 
-      <RoteiroPainel uid={perfil?.id} data={d.data} testemunhos={d.testemunhos} />
+      <RoteiroPainel uid={perfil?.id} data={d.data} testemunhos={d.testemunhos} ala={d.ala} />
 
       <form onSubmit={(e) => e.preventDefault()}>
         {SECOES.map(([secao, campos]) => {

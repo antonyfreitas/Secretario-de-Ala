@@ -1,3 +1,4 @@
+import { BLOCOS, type ItemRoteiro } from '../dados/falas';
 import { PROGRAMA } from '../dados/roteiro';
 import { ymd } from './datas';
 
@@ -6,7 +7,7 @@ import { ymd } from './datas';
  * depois do domingo. Nada daqui vai para o servidor: o Manual 30.6 pede sigilo sobre chamados e
  * desobrigações até o anúncio.
  */
-export interface EstadoRoteiro { versao: 1; data: string; liga: Record<string, boolean> }
+export interface EstadoRoteiro { versao: 1; data: string; liga: Record<string, boolean>; itens: ItemRoteiro[] }
 
 const PREFIXO = 'roteiro:';
 const chave = (uid: string | undefined, data: string) => `${PREFIXO}${uid ?? 'visitante'}:${data}`;
@@ -16,7 +17,7 @@ export function padraoLiga(): Record<string, boolean> {
 }
 
 export function carregarRoteiro(uid: string | undefined, data: string): EstadoRoteiro {
-  const base: EstadoRoteiro = { versao: 1, data, liga: padraoLiga() };
+  const base: EstadoRoteiro = { versao: 1, data, liga: padraoLiga(), itens: [] };
   try {
     const bruto = localStorage.getItem(chave(uid, data));
     if (!bruto) return base;
@@ -26,7 +27,9 @@ export function carregarRoteiro(uid: string | undefined, data: string): EstadoRo
       if (typeof salvo.liga?.[i.id] === 'boolean') liga[i.id] = salvo.liga[i.id];
       if (i.fixo) liga[i.id] = true;
     }
-    return { versao: 1, data, liga };
+    const validos = new Set<string>(BLOCOS.map((b) => b.id));
+    const itens = Array.isArray(salvo.itens) ? salvo.itens.filter((i) => i && validos.has(i.bloco) && typeof i.id === 'string') : [];
+    return { versao: 1, data, liga, itens };
   } catch {
     return base;
   }
