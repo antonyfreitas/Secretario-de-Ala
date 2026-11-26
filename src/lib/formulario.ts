@@ -14,7 +14,7 @@ export const SECOES: [string, Campo[]][] = [
     { id: 'hinoAbertura', rotulo: 'Hino de abertura', tipo: 'hino' }, { id: 'oracaoAbertura', rotulo: 'Oração de abertura' },
   ]],
   ['Assuntos da ala e da estaca', [
-    { id: 'assuntos', rotulo: 'Apoios, desobrigações e outros assuntos', tipo: 'area', dica: 'Um por linha. Ex.: APOIAR: nome - chamado', larga: true },
+    { id: 'assuntos', rotulo: 'Outros assuntos (texto livre)', tipo: 'area', dica: 'Um por linha. Ex.: informar sobre a atividade da ala', larga: true },
     { id: 'semAssuntos', rotulo: 'Não guardar este campo ao salvar', tipo: 'check', soLogado: true },
   ]],
   ['Sacramento', [

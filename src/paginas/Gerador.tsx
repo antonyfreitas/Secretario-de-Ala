@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import Enviar from '../componentes/Enviar';
 import HinoInput from '../componentes/HinoInput';
 import OradorInput from '../componentes/OradorInput';
+import AssuntosFalas from '../componentes/AssuntosFalas';
 import RoteiroPainel from '../componentes/RoteiroPainel';
 import { baixar, slug } from '../lib/arquivo';
 import { novoId, useAtas } from '../lib/armazem';
@@ -13,6 +14,7 @@ import { listarHistorico, type Edicao } from '../lib/nuvem';
 import { indexarOradores } from '../lib/oradores';
 import { fit } from '../lib/pdf';
 import { extrasDoRoteiro } from '../lib/roteiroPdf';
+import { useRoteiro } from '../lib/useRoteiro';
 import { CHAVES, limpar, vazio, type Ata, type Dados } from '../lib/tipos';
 
 function aparar(d: Dados): Dados {
@@ -47,6 +49,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
   const [historico, setHistorico] = useState<Edicao[]>([]);
   const atual = curId ? atas.find((a) => a.id === curId) : undefined;
   const set = (k: keyof Dados, v: string | boolean) => setD((x) => ({ ...x, [k]: v }));
+  const roteiro = useRoteiro(perfil?.id, d.data);
   // se a ala do usuário só ficar disponível depois, preenche o nome (sem sobrescrever o que ele digitou)
   useEffect(() => {
     if (org && !curId) setD((x) => (x.ala ? x : { ...x, ala: nomeDaAla(org.nome) }));
@@ -145,7 +148,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
         <p className="sub">Este é o primeiro domingo do mês. <button className="lnk2" type="button" onClick={() => set('testemunhos', true)}>Mudar para jejum e testemunhos</button></p>
       )}
 
-      <RoteiroPainel uid={perfil?.id} data={d.data} testemunhos={d.testemunhos} ala={d.ala} />
+      <RoteiroPainel data={d.data} testemunhos={d.testemunhos} r={roteiro} />
 
       <form onSubmit={(e) => e.preventDefault()}>
         {SECOES.map(([secao, campos]) => {
@@ -162,6 +165,7 @@ function Formulario({ atas, salvar }: { atas: Ata[]; salvar: (a: Ata[]) => Promi
           return (
             <fieldset key={secao}>
               <legend>{secao}</legend>
+              {secao === 'Assuntos da ala e da estaca' && <AssuntosFalas data={d.data} ala={d.ala} r={roteiro} />}
               <div className="g">
                 {vis.map((c) => {
                   if (c.tipo === 'check') {

@@ -21,7 +21,7 @@ export const PROGRAMA: ItemPrograma[] = [
   { id: 'reconhecimento', n: 3, titulo: 'Reconhecimento do líder presidente e de líderes visitantes', ref: '29.2.1.1', padrao: true },
   { id: 'anuncios', n: 4, titulo: 'Anúncios', ref: '29.2.1.1', padrao: true },
   { id: 'abertura', n: 5, titulo: 'Hino e oração de abertura', ref: '29.2.1.1', padrao: true },
-  { id: 'assuntos', n: 6, titulo: 'Assuntos da ala e da estaca', ref: '29.2.1.1; 30.3; 30.6', padrao: true, nota: 'Apoio, desobrigação e novos membros: veja as falas abaixo.' },
+  { id: 'assuntos', n: 6, titulo: 'Assuntos da ala e da estaca', ref: '29.2.1.1; 30.3; 30.6', padrao: true, nota: 'Apoios, desobrigações e boas-vindas ficam na seção "Assuntos da ala e da estaca", mais abaixo.' },
   { id: 'criancas', n: 7, titulo: 'Abençoar e dar nome a crianças', ref: '29.2.1.1', padrao: false, nota: 'Em geral, no domingo de jejum e testemunhos.' },
   { id: 'confirmacao', n: 8, titulo: 'Confirmação de novos conversos', ref: '29.2.1.1', padrao: false },
   { id: 'sacramento', n: 9, titulo: 'Hino sacramental e distribuição do sacramento', ref: '29.2.1.1', padrao: true, fixo: true },

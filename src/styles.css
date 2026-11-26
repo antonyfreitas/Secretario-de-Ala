@@ -195,3 +195,5 @@ main h2{font-size:1.1rem;margin:20px 0 4px}
 .pausa{display:inline-block;margin:0 6px;padding:0 8px;border-radius:99px;background:var(--paper);color:var(--mut);font-size:.8rem;font-style:normal}
 .chk{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:400}
 .chk input{width:20px;height:20px;flex:none}
+.assuntos-falas{margin:0 0 12px}
+.assuntos-falas .sub-titulo{margin-top:6px}
