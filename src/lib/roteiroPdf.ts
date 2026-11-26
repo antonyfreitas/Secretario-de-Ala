@@ -9,7 +9,6 @@ const completo = (i: ItemRoteiro) => i.nome.trim().length > 0 && (i.bloco === 'n
 export function extrasDoRoteiro(uid: string | undefined, data: string, ala: string): ExtrasPdf | undefined {
   if (!data) return undefined;
   const e = carregarRoteiro(uid, data);
-  if (!e.liga.assuntos) return undefined;
   const ordem = (i: ItemRoteiro) => BLOCOS.findIndex((b) => b.id === i.bloco);
   const falas = e.itens
     .filter(completo)
