@@ -1,7 +1,7 @@
 import { BLOCOS, chamadoCompleto, falaDe, type ItemRoteiro } from '../dados/falas';
 import { carregarRoteiro } from './roteiro';
 
-export interface ExtrasPdf { falas: { titulo: string; texto: string; origem: string }[]; folhaSeparada: boolean }
+export interface ExtrasPdf { falas: { titulo: string; texto: string; origem: string; pron?: string }[]; folhaSeparada: boolean }
 
 const completo = (i: ItemRoteiro) => i.nome.trim().length > 0 && (i.bloco === 'novo_membro' || i.cargo.trim().length > 0);
 
@@ -16,7 +16,7 @@ export function extrasDoRoteiro(uid: string | undefined, data: string, ala: stri
     .map((i) => {
       const b = BLOCOS.find((x) => x.id === i.bloco)!;
       const chamado = i.bloco === 'novo_membro' ? '' : ` (${chamadoCompleto(i, ala)})`;
-      return { titulo: `${b.titulo}: ${i.nome.trim()}${chamado}`, texto: falaDe(i, ala).split('[pausa]').join('(pausa)'), origem: `Origem: ${b.origem}.` };
+      return { titulo: `${b.titulo}: ${i.nome.trim()}${chamado}`, texto: falaDe(i, ala).split('[pausa]').join('(pausa)'), origem: `Origem: ${b.origem}.`, pron: i.pronuncia?.trim() || undefined };
     });
   return falas.length ? { falas, folhaSeparada: !!e.folhaSeparada } : undefined;
 }

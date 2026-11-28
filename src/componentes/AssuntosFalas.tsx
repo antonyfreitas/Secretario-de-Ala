@@ -41,6 +41,7 @@ export default function AssuntosFalas({ data, ala, r }: Props) {
                 <div className="secao"><b>{b.titulo}</b><button className="btn sw perigo" type="button" onClick={() => gravar(itens.filter((x) => x.id !== i.id))}>Remover</button></div>
                 <div className="col">
                   <div><label htmlFor={`${idn}-n`}>Nome completo</label><input id={`${idn}-n`} type="text" autoComplete="off" autoCorrect="off" value={i.nome} onChange={(e) => atualizar(i.id, { nome: e.target.value })} /></div>
+                  <div><label htmlFor={`${idn}-p`}>Como se lê o nome (opcional, ex.: Ân-to-ni)</label><input id={`${idn}-p`} type="text" autoComplete="off" autoCorrect="off" value={i.pronuncia ?? ''} onChange={(e) => atualizar(i.id, { pronuncia: e.target.value })} /></div>
                   {i.bloco !== 'novo_membro' && (
                     <>
                       <div><label htmlFor={`${idn}-c`}>Chamado (ex.: secretário, professora da Escola Dominical)</label><input id={`${idn}-c`} type="text" autoComplete="off" autoCorrect="off" value={i.cargo} onChange={(e) => atualizar(i.id, { cargo: e.target.value })} /></div>
@@ -60,6 +61,7 @@ export default function AssuntosFalas({ data, ala, r }: Props) {
                     </div>
                   )}
                 </div>
+                {i.pronuncia?.trim() && <p className="pron">Como se lê o nome: <b>{i.pronuncia.trim()}</b></p>}
                 <Fala texto={falaDe(i, ala)} />
                 <p className="sub">Origem: {b.origem}.{i.bloco !== 'novo_membro' && i.cargo.trim() ? ` Dirá: "${chamadoCompleto(i, ala)}".` : ''}</p>
               </div>

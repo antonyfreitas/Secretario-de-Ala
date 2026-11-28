@@ -14,6 +14,8 @@ export interface ItemRoteiro {
   /** Dizer "da ala X" depois do chamado. Indefinido = decide sozinho pelo texto do chamado. */
   daAla?: boolean;
   tipo: 'batizado' | 'mudou';
+  /** Como se lê o nome (opcional), para quem lê em voz alta. Não entra na fala, só como apoio. */
+  pronuncia?: string;
 }
 
 export const BLOCOS: { id: Bloco; titulo: string; ordem: number; origem: string }[] = [

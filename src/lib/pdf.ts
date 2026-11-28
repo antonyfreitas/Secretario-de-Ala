@@ -56,14 +56,17 @@ export function buildPdf(d,s,ex,modo){
     y+=h;
   };
 
-  const fala=(label,text)=>{
+  const fala=(label,text,pron)=>{
     doc.setFont('helvetica','bold');doc.setFontSize(F*.95);
     const lb=doc.splitTextToSize(label,CW-2*P);
-    doc.setFont('helvetica','normal');
-    const t=doc.splitTextToSize(text,CW-2*P),h=2*P+lb.length*LH+t.length*LH;
+    doc.setFont('helvetica','italic');doc.setFontSize(F*.88);
+    const pr=pron?doc.splitTextToSize('Como se lê o nome: '+pron,CW-2*P):[];
+    doc.setFont('helvetica','normal');doc.setFontSize(F*.95);
+    const t=doc.splitTextToSize(text,CW-2*P),h=2*P+lb.length*LH+pr.length*LH+t.length*LH;
     need(h);doc.rect(M,y,CW,h);
     lb.forEach((q,i)=>txt(q,M+P,y+P+F*.31+i*LH,'bold',F*.95));
-    t.forEach((q,i)=>txt(q,M+P,y+P+F*.31+lb.length*LH+i*LH,'normal',F*.95));
+    pr.forEach((q,i)=>txt(q,M+P,y+P+F*.31+(lb.length+i)*LH,'italic',F*.88));
+    t.forEach((q,i)=>txt(q,M+P,y+P+F*.31+(lb.length+pr.length+i)*LH,'normal',F*.95));
     y+=h;
   };
 
@@ -84,7 +87,7 @@ export function buildPdf(d,s,ex,modo){
   cells([['Hino de abertura',d.hinoAbertura,CW/2],['Oração de abertura',d.oracaoAbertura,CW/2]]);
   y+=GAP;bar('Assuntos da ala e da estaca');
   if(ex&&ex.falas&&ex.falas.length){
-    ex.falas.forEach(f=>{if(modo==='dentro')fala(f.titulo,f.texto);else cells([[f.titulo,'fala na folha de falas',CW]])});
+    ex.falas.forEach(f=>{if(modo==='dentro')fala(f.titulo,f.texto,f.pron);else cells([[f.titulo,'fala na folha de falas',CW]])});
     if(lines(d.assuntos).length)list('Outros assuntos','',lines(d.assuntos));
   }else list('',NOTA,lines(d.assuntos));
   y+=GAP;bar('Sacramento');
@@ -118,10 +121,13 @@ function folhaDeFalas(doc,d,ex){
   ex.falas.forEach(f=>{
     doc.setFont('helvetica','bold');doc.setFontSize(13);
     const lb=doc.splitTextToSize(f.titulo,W);
+    doc.setFont('helvetica','italic');doc.setFontSize(12);
+    const pr=f.pron?doc.splitTextToSize('Como se lê o nome: '+f.pron,W):[];
     doc.setFont('helvetica','normal');doc.setFontSize(15);
-    const t=doc.splitTextToSize(f.texto,W),h=lb.length*6+t.length*7.2+12;
+    const t=doc.splitTextToSize(f.texto,W),h=lb.length*6+pr.length*6+t.length*7.2+12;
     if(y+h>PH-18){doc.addPage();y=M}
     lb.forEach((q,i)=>txt(q,M,y+i*6,'bold',13));y+=lb.length*6+1;
+    pr.forEach((q,i)=>txt(q,M,y+i*6,'italic',12,CINZA));y+=pr.length*6;
     t.forEach((q,i)=>txt(q,M,y+i*7.2,'normal',15));y+=t.length*7.2+2;
     txt(f.origem,M,y+1,'italic',9,CINZA);y+=10;
   });
